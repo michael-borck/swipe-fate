@@ -11,7 +11,6 @@ class CoreEngine:
         self.game_state = GameState()
         self.ui_manager = UIManager(self.page, self.game_state)
         self.event_manager = EventManager()
-
         self.setup()
 
     def setup(self):
@@ -21,9 +20,9 @@ class CoreEngine:
         self.events = loader.get_events()
         self.resources = loader.get_resources()
         self.themes = loader.get_themes()
-        # self.ui_manager.setup_ui()
+        self.ui_manager.setup_ui()
         self.event_manager.register_listener("score_changed", self.ui_manager.update_score_display)
         self.page.update()
 
     def run(self):
-        self.page.add(self.ui_manager.main_view())
+        self.page.update()
