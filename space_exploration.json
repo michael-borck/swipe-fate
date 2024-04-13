@@ -1,0 +1,32 @@
+{
+  "theme": "Space Exploration",
+  "resources": {
+    "fuel": 100,
+    "food": 200,
+    "money": 150
+  },
+  "decisions": [
+    {
+      "description": "Explore the nearby asteroid for resources?",
+      "effects": {
+        "fuel": -20,
+        "findings": { "random": ["ore", "ice", "nothing"] }
+      }
+    },
+    {
+      "description": "Trade with the alien vessel?",
+      "effects": {
+        "food": -10,
+        "money": 30
+      }
+    }
+  ],
+  "events": [
+    {
+      "name": "Solar Flare",
+      "effects": {
+        "fuel": -10
+      }
+    }
+  ]
+}

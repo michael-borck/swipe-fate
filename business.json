@@ -1,0 +1,103 @@
+{
+  "resources": {
+    "money": 100,
+    "popularity": 50,
+    "staff": 10,
+    "inventory": 20
+  },
+  "decisions": [
+    {
+      "id": "decision001",
+      "description": "Invest in new technology?",
+      "swipeLeft": {
+        "effects": {
+          "money": -20,
+          "popularity": 5,
+          "inventory": 10
+        },
+        "message": "You invested in technology, gaining popularity but losing money."
+      },
+      "swipeRight": {
+        "effects": {
+          "money": -15,
+          "popularity": -5,
+          "staff": 2,
+          "inventory": -5
+        },
+        "message": "You cautiously invested in technology, affecting multiple resources."
+      },
+      "icon": "url_to_icon",
+      "theme": "technology"
+    },
+    {
+      "id": "decision002",
+      "description": "Expand into new markets?",
+      "swipeLeft": {
+        "effects": {
+          "money": -50,
+          "popularity": 10,
+          "staff": 5,
+          "inventory": 15
+        },
+        "message": "Expansion was costly but brought significant gains."
+      },
+      "swipeRight": {
+        "effects": {
+          "money": 30,
+          "popularity": -10,
+          "staff": -3,
+          "inventory": 20
+        },
+        "message": "You earned money but at the cost of popularity and staff."
+      },
+      "icon": "url_to_icon",
+      "theme": "expansion"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule001",
+      "name": "Maintain Profit Margin",
+      "condition": "resources.money / resources.time < 0.8",
+      "action": "increase_resources('money', 10)"
+    },
+    {
+      "id": "rule002",
+      "name": "Invest in Employee Training",
+      "condition": "resources.staff < 80",
+      "action": "increase_resources('skills', 5)"
+    }
+  ],
+  "events": [
+    {
+      "id": "event001",
+      "name": "New Business Opportunity",
+      "trigger": "random_chance(0.1)",
+      "effects": {
+        "money": 50
+      },
+      "message": "A new business opportunity has unexpectedly increased your funds!"
+    },
+    {
+      "id": "event002",
+      "name": "Supply Chain Disruption",
+      "trigger": "random_chance(0.15)",
+      "effects": {
+        "money": -30
+      },
+      "message": "Your supply chain faced disruptions, causing a significant financial loss."
+    }
+  ],
+  "themes": {
+    "technology": {
+      "base_chance": 0.3,
+      "active": true,
+      "decisions": ["decision001"]
+    },
+    "expansion": {
+      "base_chance": 0.2,
+      "active": false,
+      "decisions": ["decision002"]
+    }
+  }
+}
