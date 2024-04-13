@@ -88,10 +88,3 @@ Project Link: [https://github.com/yourusername/dynamic-game-simulator](https://g
 
 - Thanks to everyone who has contributed to making this project possible.
 - Special thanks to the Flet community for providing a versatile and powerful framework.
-```
-
-### Additional Details
-- **Flet Specific Instructions**: The README now includes instructions for running the application using Flet in both web and desktop modes, which is crucial for a Flet-based project.
-- **Environment Setup**: Instructions for setting up a virtual environment are included, which is important for Python projects to manage dependencies effectively.
-
-This updated README template is designed to help users and contributors understand how to install, run, and interact with your Flet-based game project effectively.
