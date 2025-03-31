@@ -1,9 +1,9 @@
 import flet as ft
-from game_state import GameState
-from ui_manager import UIManager
-from event_manager import EventManager
-from event import Event
-from resource_loader import ResourceLoader
+from polysim.core.game_state import GameState
+from polysim.ui.ui_manager import UIManager
+from polysim.core.event_manager import EventManager
+from polysim.core.event import Event
+from polysim.resource_loader import ResourceLoader
 
 class CoreEngine:
     def __init__(self, page: ft.Page):
@@ -14,7 +14,8 @@ class CoreEngine:
         self.setup()
 
     def setup(self):
-        loader = ResourceLoader('config.json')
+        # Use path to configs folder
+        loader = ResourceLoader('configs/business.json')
         self.decisions = loader.get_decisions()
         self.rules = loader.get_rules()
         self.events = loader.get_events()

@@ -9,6 +9,31 @@ PolySim is a versatile simulation game built using the Flet framework, which all
 - **Dynamic Configuration:** Game settings and rules are loaded dynamically from JSON files.
 - **Extensible and Scalable:** Designed to easily incorporate additional themes and game mechanics.
 
+## Project Structure
+
+```
+polysim/
+├── src/                   # Source code directory
+│   └── polysim/          # Main package
+│       ├── core/         # Core game engine components
+│       │   ├── core_engine.py
+│       │   ├── game_state.py
+│       │   ├── event.py
+│       │   └── ...
+│       ├── ui/           # User interface components
+│       │   └── ui_manager.py
+│       ├── resource_loader.py
+│       └── main.py       # Application entry point
+├── configs/              # Game configuration files
+│   ├── business.json
+│   └── space_exploration.json
+├── assets/               # Game assets (images, sounds, etc.)
+├── tests/                # Test directory
+├── docs/                 # Documentation
+├── setup.py              # Package setup file
+└── run_polysim.py        # Convenience script for running the game
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -42,12 +67,25 @@ PolySim is a versatile simulation game built using the Flet framework, which all
 
 To start the game in a web browser, run the following command in the terminal:
 ```bash
-flet main.py --web
+# Using the convenience script
+./run_polysim.py --web
+
+# Or using flet directly
+flet src/polysim/main.py --web
 ```
 
 To run as a desktop application:
 ```bash
-flet main.py
+# Using the convenience script
+./run_polysim.py
+
+# Or using flet directly
+flet src/polysim/main.py
+```
+
+For development, you can also install the package in development mode:
+```bash
+pip install -e .
 ```
 
 ## Usage
@@ -61,7 +99,7 @@ flet main.py
 ### Example Configurations
 
 Configuration files are located in the `configs/` directory:
-- `business_management.json`: Configures the game for a business management scenario.
+- `business.json`: Configures the game for a business management scenario.
 - `space_exploration.json`: Sets up a space exploration adventure.
 
 ## Contributing

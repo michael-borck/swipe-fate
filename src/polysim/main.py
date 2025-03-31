@@ -1,5 +1,5 @@
 import flet as ft
-from core_engine import CoreEngine
+from polysim.core.core_engine import CoreEngine
 
 def main(page: ft.Page):
     engine = CoreEngine(page)
