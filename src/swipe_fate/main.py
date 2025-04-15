@@ -1,245 +1,541 @@
+"""
+SwipeFate - A card-based decision game with swipe mechanics
+"""
 import flet as ft
+import os
+import sys
 import json
+import re
+from typing import Dict, Any, List, Optional
 
-def main(page: ft.Page):
-    """Main entry point for the application"""
-    print("Starting basic SwipeFate")
+class SimpleGameUI:
+    """Simple UI implementation for SwipeFate that works on all Flet versions"""
     
-    # Configure default page settings
-    page.title = "SwipeFate"
-    page.bgcolor = "white"
-    page.padding = 20
-    
-    # Add a header
-    header = ft.Text(value="SwipeFate", size=30, color="white", bgcolor="blue", width=600)
-    page.add(header)
-    
-    # Create a container for content
-    # Using simpler properties for older flet versions
-    content_area = ft.Container(
-        content=None,
-        padding=20,
-        width=600,
-        bgcolor="#f0f0f0"
-        # Removed border_radius for compatibility
-    )
-    page.add(content_area)
-    
-    # Create a back button (initially hidden)
-    back_button = ft.ElevatedButton(
-        text="← Back to Game Selection",
-        on_click=lambda _: show_game_selection(),
-        visible=False
-    )
-    page.add(back_button)
-    
-    # Show game selection
-    def show_game_selection():
-        print("Showing game selection")
+    def __init__(self, page: ft.Page):
+        """Initialize the game UI"""
+        self.page = page
+        self.setup_page()
         
-        back_button.visible = False
+        # Game state
+        self.game_data = {}
+        self.decisions = []
+        self.current_decision = None
+        self.resources = {}
+        self.resource_values = {}
         
-        selection_text = ft.Text(value="Choose a game:", size=20)
+        # Show game selection
+        self.show_game_selection()
         
-        button1 = ft.ElevatedButton(
-            text="Business Simulator", 
-            on_click=lambda _: load_game("configs/business.json"),
-            bgcolor="blue", 
-            color="white",
-            width=200
+    def setup_page(self):
+        """Set up page properties"""
+        self.page.title = "SwipeFate"
+        self.page.bgcolor = "#f0f0f0"
+        self.page.padding = 10
+        self.page.window_width = 400
+        self.page.window_height = 800
+        self.page.window_resizable = True
+        
+    def show_game_selection(self):
+        """Show the game selection screen"""
+        self.page.controls.clear()
+        
+        # Create header
+        header = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Text("SwipeFate", size=24, weight="bold", color="white"),
+                    ft.IconButton(
+                        icon=ft.icons.HOME,
+                        icon_color="white",
+                        on_click=lambda _: self.show_game_selection()
+                    )
+                ],
+                alignment="spaceBetween"
+            ),
+            bgcolor="#2196f3",
+            padding=15
         )
         
-        button2 = ft.ElevatedButton(
-            text="Space Explorer", 
-            on_click=lambda _: load_game("configs/space_exploration.json"),
-            bgcolor="purple", 
-            color="white",
-            width=200
+        # Create selection buttons
+        business_card = ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=[
+                            ft.Icon(ft.icons.BUSINESS, size=30, color="#2196f3"),
+                            ft.Text("Startup Simulator", size=20, weight="bold")
+                        ],
+                        spacing=10
+                    ),
+                    ft.Text(
+                        "Build your startup from zero to IPO",
+                        size=14,
+                        color="#757575"
+                    )
+                ]
+            ),
+            padding=20,
+            margin=10,
+            bgcolor="white",
+            border_radius=5,
+            on_click=lambda _: self.load_game("configs/business.json")
         )
         
-        # Simple column alignment for older flet versions
-        content_area.content = ft.Column([
-            selection_text,
-            # Add spacer for centering
-            ft.Container(height=20),
-            button1,
-            ft.Container(height=10),
-            button2
-        ])
-        page.update()
-    
-    # Game state variables
-    decisions = []
-    current_resources = {}
-    
-    # Load game config
-    def load_game(config_file):
-        print(f"Loading game: {config_file}")
-        nonlocal decisions, current_resources
+        space_card = ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=[
+                            ft.Icon(ft.icons.ROCKET_LAUNCH, size=30, color="#9c27b0"),
+                            ft.Text("Space Explorer", size=20, weight="bold")
+                        ],
+                        spacing=10
+                    ),
+                    ft.Text(
+                        "Survive the dangers of deep space exploration",
+                        size=14,
+                        color="#757575"
+                    )
+                ]
+            ),
+            padding=20,
+            margin=10,
+            bgcolor="white",
+            border_radius=5,
+            on_click=lambda _: self.load_game("configs/space_exploration.json")
+        )
         
-        # Show loading indicator
-        content_area.content = ft.Text(value="Loading game...", size=20)
-        page.update()
+        self.page.add(
+            header,
+            ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Text(
+                            "Choose Your Adventure",
+                            size=28,
+                            weight="bold",
+                            text_align="center"
+                        ),
+                        ft.Text(
+                            "Select a game to begin your journey",
+                            size=16,
+                            color="#757575",
+                            text_align="center"
+                        ),
+                        business_card,
+                        space_card
+                    ],
+                    spacing=20,
+                    horizontal_alignment="center"
+                ),
+                padding=30,
+                alignment="center"
+            )
+        )
         
+        self.page.update()
+    
+    def load_game(self, config_file: str):
+        """Load a game configuration file"""
         try:
-            # Read JSON file
+            # Clear previous game content
+            self.page.controls.clear()
+            
+            # Show loading indicator
+            self.page.add(
+                ft.Container(
+                    content=ft.Column(
+                        controls=[
+                            ft.ProgressRing(),
+                            ft.Text("Loading game...", size=20)
+                        ],
+                        alignment="center",
+                        horizontal_alignment="center"
+                    ),
+                    alignment="center",
+                    expand=True
+                )
+            )
+            self.page.update()
+            
+            # Read config file
             with open(config_file, "r") as f:
                 file_content = f.read()
             
             # Pre-process to handle + and - signs
-            import re
             clean_content = re.sub(r'(\s+)"(\w+)":\s*\+(\d+)', r'\1"\2": \3', file_content)
+            clean_content = re.sub(r'(\s+)"(\w+)":\s*\-(\d+)', r'\1"\2": -\3', clean_content)
             
-            # Parse the JSON
-            game_data = json.loads(clean_content)
+            # Parse JSON
+            self.game_data = json.loads(clean_content)
             
-            # Extract game info
-            game_name = game_data.get("metadata", {}).get("name", "Game")
-            decisions = game_data.get("decisions", [])
-            current_resources = game_data.get("resources", {})
+            # Extract game data
+            self.decisions = self.game_data.get("decisions", [])
+            self.resources = self.game_data.get("resources", {})
             
-            print(f"Loaded {game_name} with {len(decisions)} decisions")
+            # Initialize resource values
+            self.resource_values = {}
+            for resource_id, resource_info in self.resources.items():
+                self.resource_values[resource_id] = resource_info.get("initial", 0)
             
-            # Make back button visible
-            back_button.visible = True
+            # Create game UI
+            header = ft.Container(
+                content=ft.Row(
+                    controls=[
+                        ft.Text("SwipeFate", size=24, weight="bold", color="white"),
+                        ft.IconButton(
+                            icon=ft.icons.HOME,
+                            icon_color="white",
+                            on_click=lambda _: self.show_game_selection()
+                        )
+                    ],
+                    alignment="spaceBetween"
+                ),
+                bgcolor="#2196f3",
+                padding=15
+            )
             
-            # Start the game with first decision
-            if decisions:
-                show_decision(decisions[0], current_resources)
-            else:
-                content_area.content = ft.Text(value="No decisions found in game data", size=20, color="red")
-                page.update()
-                
+            self.page.controls.clear()
+            
+            # Create main page layout
+            self.page.add(
+                header,
+                ft.Divider(height=1, color="#cccccc"),
+                self._create_resource_display()
+            )
+            
+            # Start with first decision
+            self.show_decision("start")
+        
         except Exception as e:
-            content_area.content = ft.Text(value=f"Error loading game: {str(e)}", size=20, color="red")
-            page.update()
-            print(f"Error loading game: {e}")
+            self.show_error(f"Error loading game: {str(e)}")
     
-    # Show a decision card
-    def show_decision(decision, resources):
-        print(f"Showing decision: {decision.get('id')}")
+    def _create_resource_display(self):
+        """Create the resource display section"""
+        resource_column = ft.Column(spacing=5)
         
-        decision_text = decision.get("text", "Decision text missing")
-        left_option = decision.get("left", {}).get("text", "Left option")
-        right_option = decision.get("right", {}).get("text", "Right option")
-        
-        # Create resource display
-        resource_items = []
-        for resource_id, resource_info in resources.items():
-            resource_value = resource_info.get("initial", 0)
+        for resource_id, resource_info in self.resources.items():
+            value = self.resource_values.get(resource_id, 0)
             display_name = resource_info.get("display_name", resource_id.title())
             
-            resource_row = ft.Text(
-                value=f"{display_name}: {resource_value}",
-                size=16
+            resource_row = ft.Row(
+                controls=[
+                    ft.Text(f"{display_name}:", size=14),
+                    ft.Text(f"{value}", size=14, weight="bold")
+                ],
+                alignment="spaceBetween"
             )
-            resource_items.append(resource_row)
+            
+            resource_column.controls.append(resource_row)
         
-        resources_section = ft.Column(
-            controls=[ft.Text(value="Resources:", size=18, weight="bold")] + resource_items,
-            spacing=5
+        return ft.Container(
+            content=ft.Column(
+                controls=[
+                    ft.Text("Resources", size=16, weight="bold"),
+                    resource_column
+                ]
+            ),
+            padding=10,
+            margin=10,
+            bgcolor="white",
+            border_radius=5,
+            border=ft.border.all(1, "#cccccc")
         )
-        
-        # Create decision card - simplified for older flet versions
-        decision_card = ft.Container(
-            content=ft.Column([
-                ft.Text(value=decision_text, size=20, weight="bold"),
-                ft.Divider(),
-                ft.Text(value="Options:", size=16),
-                # Use container with margin instead of Row with alignment
-                ft.Container(
-                    content=ft.Row([
-                        ft.ElevatedButton(
-                            text=left_option,
-                            bgcolor="red",
-                            color="white",
-                            on_click=lambda _: handle_choice(decision, "left", resources)
-                        ),
-                        ft.Container(width=20),  # Spacer between buttons
-                        ft.ElevatedButton(
-                            text=right_option,
-                            bgcolor="green",
-                            color="white",
-                            on_click=lambda _: handle_choice(decision, "right", resources)
-                        )
-                    ]),
-                    margin=10
-                )
-            ]),
-            padding=20,
-            bgcolor="white"
-            # Removed border and border_radius for compatibility
-        )
-        
-        # Combine everything
-        content_area.content = ft.Column([
-            resources_section,
-            ft.Container(height=20),  # Spacer
-            decision_card
-        ])
-        page.update()
     
-    # Handle a decision choice
-    def handle_choice(decision, direction, resources):
-        print(f"Choice made: {direction}")
-        nonlocal current_resources
+    def update_resource_display(self):
+        """Update the resource display with current values"""
+        resource_display = self._create_resource_display()
         
-        choice = decision.get(direction, {})
+        # Replace the resource display in the page
+        for i, control in enumerate(self.page.controls):
+            if i == 2:  # The resource display is the third element
+                self.page.controls[i] = resource_display
+                break
+        
+        self.page.update()
+    
+    def show_decision(self, decision_id: str):
+        """Show a decision card"""
+        # Find the decision
+        decision = None
+        for d in self.decisions:
+            if d.get("id") == decision_id:
+                decision = d
+                break
+        
+        if not decision:
+            self.show_error(f"Decision with ID '{decision_id}' not found")
+            return
+        
+        self.current_decision = decision
+        
+        # Extract decision data
+        decision_text = decision.get("text", "Make a decision")
+        left_option = decision.get("left", {}).get("text", "Left option")
+        right_option = decision.get("right", {}).get("text", "Right option")
+        image_url = decision.get("image_url", None)
+        
+        # Create decision card
+        card_content = []
+        
+        # Add image if available
+        if image_url:
+            card_content.append(
+                ft.Image(
+                    src=image_url,
+                    width=350,
+                    height=200,
+                    fit="cover"
+                )
+            )
+        
+        # Add decision text
+        card_content.append(
+            ft.Container(
+                content=ft.Text(
+                    value=decision_text,
+                    size=20,
+                    weight="bold",
+                    text_align="center"
+                ),
+                padding=15
+            )
+        )
+        
+        # Add buttons
+        card_content.append(
+            ft.Row(
+                controls=[
+                    ft.ElevatedButton(
+                        text=left_option,
+                        on_click=lambda _: self.handle_decision("left"),
+                        bgcolor="#f44336",
+                        color="white",
+                        expand=1
+                    ),
+                    ft.ElevatedButton(
+                        text=right_option,
+                        on_click=lambda _: self.handle_decision("right"),
+                        bgcolor="#4caf50",
+                        color="white",
+                        expand=1
+                    )
+                ],
+                spacing=10,
+                alignment="center"
+            )
+        )
+        
+        # Create the card
+        decision_card = ft.Card(
+            content=ft.Column(
+                controls=card_content,
+                horizontal_alignment="center"
+            ),
+            width=350,
+            elevation=5,
+            margin=10
+        )
+        
+        # Add or replace the decision card
+        if len(self.page.controls) > 3:
+            self.page.controls.pop()  # Remove previous card if exists
+        
+        self.page.add(
+            ft.Container(
+                content=decision_card,
+                alignment="center",
+                margin=ft.margin.only(top=20)
+            )
+        )
+        
+        self.page.update()
+    
+    def handle_decision(self, direction: str):
+        """Handle a decision choice"""
+        if not self.current_decision:
+            return
+        
+        choice = self.current_decision.get(direction, {})
         effects = choice.get("effects", {})
         next_id = choice.get("next", None)
         
-        # Apply effects to resources
+        # Apply resource effects
         for resource_id, change in effects.items():
-            if resource_id in current_resources:
-                resource_config = current_resources[resource_id]
+            if resource_id in self.resource_values:
+                resource_info = self.resources.get(resource_id, {})
+                min_val = resource_info.get("min", 0)
+                max_val = resource_info.get("max", 100)
                 
-                # Update the initial value (which we use as current value)
-                current_value = resource_config.get("initial", 0)
-                new_value = current_value + change
-                
-                # Apply min/max constraints
-                min_val = resource_config.get("min", 0)
-                max_val = resource_config.get("max", 1000)
+                # Apply change with constraints
+                old_value = self.resource_values[resource_id]
+                new_value = old_value + change
                 new_value = max(min_val, min(max_val, new_value))
-                
-                # Update the resource
-                resource_config["initial"] = new_value
-                print(f"Updated {resource_id}: {current_value} → {new_value}")
+                self.resource_values[resource_id] = new_value
         
-        # This feedback now happens in the continue button section below
+        # Update the resource display
+        self.update_resource_display()
         
-        # Find next decision
-        next_decision = None
-        if next_id:
-            for d in range(len(decisions)):
-                if decisions[d].get("id") == next_id:
-                    next_decision = decisions[d]
-                    break
+        # Check for game over
+        game_over = self._check_game_over()
         
-        # Show next decision with a continue button
-        if next_decision:
-            # Show a "continue" button instead of using page.after
-            continue_button = ft.ElevatedButton(
-                text="Continue →",
-                on_click=lambda _: show_decision(next_decision, current_resources),
-                bgcolor="blue",
-                color="white"
+        # Show feedback
+        if game_over:
+            self._show_game_over()
+        elif next_id:
+            # To show a confirmation between decisions, uncomment this section
+            # and comment out the immediate show_decision call
+            """
+            confirmation_card = ft.Card(
+                content=ft.Container(
+                    content=ft.Column(
+                        controls=[
+                            ft.Text(f"You chose: {choice.get('text', '')}", size=16, weight="bold"),
+                            ft.ElevatedButton(
+                                text="Continue →",
+                                on_click=lambda _: self.show_decision(next_id),
+                                bgcolor="#2196f3",
+                                color="white"
+                            )
+                        ],
+                        spacing=10,
+                        horizontal_alignment="center"
+                    ),
+                    padding=20
+                ),
+                width=350,
+                elevation=5
             )
             
-            content_area.content = ft.Column([
-                ft.Text(
-                    value=f"You chose: {choice.get('text', direction)}",
-                    size=20,
-                    color="blue"
-                ),
-                ft.Container(height=20),  # Spacer
-                continue_button
-            ])
-            page.update()
+            # Replace the decision card
+            if len(self.page.controls) > 3:
+                self.page.controls.pop()
+            
+            self.page.add(
+                ft.Container(
+                    content=confirmation_card,
+                    alignment="center",
+                    margin=ft.margin.only(top=20)
+                )
+            )
+            
+            self.page.update()
+            """
+            
+            # Direct transition to next decision
+            self.show_decision(next_id)
     
-    # Start with game selection
-    show_game_selection()
-    print("Initial setup complete")
+    def _check_game_over(self):
+        """Check if the game is over based on resource values"""
+        for resource_id, value in self.resource_values.items():
+            resource_info = self.resources.get(resource_id, {})
+            min_val = resource_info.get("min", 0)
+            
+            # Check if it's a critical resource (these are just examples)
+            is_critical = resource_id in ["money", "fuel", "oxygen", "food"]
+            
+            if is_critical and value <= min_val:
+                return True
+        
+        return False
+    
+    def _show_game_over(self):
+        """Show game over screen"""
+        if len(self.page.controls) > 3:
+            self.page.controls.pop()  # Remove decision card
+        
+        game_over_card = ft.Card(
+            content=ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Text("Game Over", size=30, weight="bold", color="#f44336"),
+                        ft.Text("Your journey has come to an end.", size=16),
+                        ft.Row(
+                            controls=[
+                                ft.ElevatedButton(
+                                    text="Play Again",
+                                    on_click=lambda _: self.show_decision("start"),
+                                    bgcolor="#2196f3",
+                                    color="white"
+                                ),
+                                ft.ElevatedButton(
+                                    text="Main Menu",
+                                    on_click=lambda _: self.show_game_selection(),
+                                    bgcolor="#9e9e9e",
+                                    color="white"
+                                )
+                            ],
+                            alignment="center",
+                            spacing=10
+                        )
+                    ],
+                    horizontal_alignment="center",
+                    spacing=20
+                ),
+                padding=30
+            ),
+            width=350,
+            elevation=5
+        )
+        
+        self.page.add(
+            ft.Container(
+                content=game_over_card,
+                alignment="center",
+                margin=ft.margin.only(top=20)
+            )
+        )
+        
+        self.page.update()
+    
+    def show_error(self, message: str):
+        """Show an error message"""
+        self.page.controls.clear()
+        
+        header = ft.Container(
+            content=ft.Row(
+                controls=[
+                    ft.Text("SwipeFate", size=24, weight="bold", color="white"),
+                    ft.IconButton(
+                        icon=ft.icons.HOME,
+                        icon_color="white",
+                        on_click=lambda _: self.show_game_selection()
+                    )
+                ],
+                alignment="spaceBetween"
+            ),
+            bgcolor="#2196f3",
+            padding=15
+        )
+        
+        self.page.add(
+            header,
+            ft.Container(
+                content=ft.Column(
+                    controls=[
+                        ft.Icon(ft.icons.ERROR_OUTLINE, size=64, color="#f44336"),
+                        ft.Text("Error", size=28, weight="bold", color="#f44336"),
+                        ft.Text(message, size=16, text_align="center"),
+                        ft.ElevatedButton(
+                            text="Back to Menu",
+                            on_click=lambda _: self.show_game_selection()
+                        )
+                    ],
+                    alignment="center",
+                    horizontal_alignment="center",
+                    spacing=20
+                ),
+                padding=30,
+                alignment="center"
+            )
+        )
+        
+        self.page.update()
+
+def main(page: ft.Page):
+    """Main entry point for the application"""
+    # Use the simple UI which is compatible with all Flet versions
+    SimpleGameUI(page)
 
 if __name__ == "__main__":
     ft.app(target=main)
