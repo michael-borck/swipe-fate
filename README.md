@@ -1,6 +1,6 @@
-# PolySim
+# SwipeFate
 
-PolySim is a versatile simulation game built using the Flet framework, which allows you to write your application in Python and deploy it seamlessly across the web, Android, iOS, and desktop platforms. The simulator enable dynamic switching between game themes and mechanics via externally loaded JSON configuration files. The application is cross-platform and can run as a web app, desktop app, or on mobile devices.
+SwipeFate is a versatile simulation game built using the Flet framework, which allows you to write your application in Python and deploy it seamlessly across the web, Android, iOS, and desktop platforms. The simulator enable dynamic switching between game themes and mechanics via externally loaded JSON configuration files. The application is cross-platform and can run as a web app, desktop app, or on mobile devices.
 
 ## Features
 
@@ -12,9 +12,9 @@ PolySim is a versatile simulation game built using the Flet framework, which all
 ## Project Structure
 
 ```
-polysim/
+SwipeFate/
 ├── src/                   # Source code directory
-│   └── polysim/          # Main package
+│   └── swipe_fate/        # Main package
 │       ├── core/         # Core game engine components
 │       │   ├── core_engine.py
 │       │   ├── game_state.py
@@ -29,9 +29,8 @@ polysim/
 │   └── space_exploration.json
 ├── assets/               # Game assets (images, sounds, etc.)
 ├── tests/                # Test directory
-├── docs/                 # Documentation
-├── setup.py              # Package setup file
-└── run_polysim.py        # Convenience script for running the game
+├── pyproject.toml        # Modern Python project configuration
+└── run_swipe_fate.py     # Convenience script for running the game
 ```
 
 ## Getting Started
@@ -46,21 +45,21 @@ polysim/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/michaelborck/polysim.git
+   git clone https://github.com/michaelborck/SwipeFate.git
    ```
 2. Navigate to the project directory:
    ```bash
-   cd polysime
+   cd SwipeFatee
    ```
-3. Create a virtual environment (optional but recommended):
+3. Create a virtual environment with uv (recommended):
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # For Unix/macOS
-   venv\Scripts\activate  # For Windows
+   uv venv
+   source .venv/bin/activate  # For Unix/macOS
+   .venv\Scripts\activate  # For Windows
    ```
-4. Install the required dependencies:
+4. Install the package and dependencies:
    ```bash
-   pip install -r requirements.txt
+   uv pip install -e ".[dev]"
    ```
 
 ### Running the Game
@@ -68,25 +67,41 @@ polysim/
 To start the game in a web browser, run the following command in the terminal:
 ```bash
 # Using the convenience script
-./run_polysim.py --web
+./run_swipe_fate.py --web
 
 # Or using flet directly
-flet src/polysim/main.py --web
+flet src/swipe_fate/main.py --web
 ```
 
 To run as a desktop application:
 ```bash
 # Using the convenience script
-./run_polysim.py
+./run_swipe_fate.py
 
 # Or using flet directly
-flet src/polysim/main.py
+flet src/swipe_fate/main.py
 ```
 
-For development, you can also install the package in development mode:
-```bash
-pip install -e .
-```
+### Development Tools
+
+SwipeFate uses modern Python development tools:
+
+- **ruff**: For linting and formatting
+  ```bash
+  ruff check .
+  ruff format .
+  ```
+
+- **mypy**: For type checking
+  ```bash
+  mypy src
+  ```
+
+- **pytest**: For testing
+  ```bash
+  pytest
+  pytest --cov=swipe_fate
+  ```
 
 ## Usage
 

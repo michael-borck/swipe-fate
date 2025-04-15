@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Wrapper script to run PolySim directly from the repository
+Wrapper script to run SwipeFate directly from the repository
 """
 import sys
 import os
@@ -9,7 +9,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "src")))
 
 import flet as ft
-from polysim.main import main
+from swipe_fate.main import main
 
 if __name__ == "__main__":
     # Check for "--web" flag
