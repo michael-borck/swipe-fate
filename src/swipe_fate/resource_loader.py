@@ -9,16 +9,37 @@ class ResourceLoader:
     def load_json(self) -> Dict[str, Any]:
         """Load and parse the JSON file."""
         try:
+            # First read the file
             with open(self.file_path, 'r') as file:
-                data = json.load(file)
-            print("JSON data loaded successfully.")
+                file_content = file.read()
+            
+            # Pre-process to handle the + and - signs in effects
+            # Replace +10 with 10 and -5 with -5
+            import re
+            preprocessed_content = re.sub(r'(\s+)"(\w+)":\s*\+(\d+)', r'\1"\2": \3', file_content)
+            
+            # Load the preprocessed content
+            data = json.loads(preprocessed_content)
+            print(f"JSON data loaded successfully from {self.file_path}")
             return data
         except FileNotFoundError:
-            print("File not found.")
+            print(f"File not found: {self.file_path}")
             return {}
-        except json.JSONDecodeError:
-            print("Error decoding JSON.")
-            return {}
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+            # Return a basic structure for debugging
+            return {
+                "metadata": {"name": "Debug Game"},
+                "resources": {"debug": {"initial": 100, "min": 0, "max": 100, "display_name": "Debug"}},
+                "decisions": [
+                    {
+                        "id": "debug",
+                        "text": "JSON loading error. Please check file format.",
+                        "left": {"text": "OK", "effects": {}, "next": "debug"},
+                        "right": {"text": "OK", "effects": {}, "next": "debug"}
+                    }
+                ]
+            }
         except Exception as e:
             print(f"An error occurred: {e}")
             return {}

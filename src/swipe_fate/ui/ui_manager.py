@@ -79,11 +79,28 @@ class UIManager:
         
     def initialize_game(self, config_data: Dict[str, Any]) -> None:
         """Initialize the game with configuration data"""
+        print("Initializing game with config data...")
+        
+        # Clear the page first
+        self.page.controls.clear()
+        self.page.update()
+        
+        # Add a header
+        header = ft.Container(
+            content=ft.Text("SwipeFate", size=24, weight="bold", color="white"),
+            padding=15,
+            bgcolor="#4a86e8",
+            alignment="center",
+        )
+        self.page.add(header)
+        
         # Extract configuration sections
         self.resources_config = config_data.get("resources", {})
         self.decisions = config_data.get("decisions", [])
         self.events = config_data.get("events", [])
         self.game_theme = config_data.get("themes", {}).get("default", {})
+        
+        print(f"Loaded {len(self.decisions)} decisions and {len(self.resources_config)} resources")
         
         # Initialize resource values
         self.resource_values = {}
@@ -99,30 +116,54 @@ class UIManager:
         # Update page background based on theme
         self.page.bgcolor = self.game_theme.get("background_color", "#f0f0f0")
         
-        # Create resource display
-        resource_display = create_resource_display(
-            self.resources_config,
-            self.resource_values,
-            self.resource_icons,
-            width=380,
-        )
+        # Add resources section
+        resources_header = ft.Text("Resources", size=18, weight="bold")
+        self.page.add(resources_header)
         
-        # Insert resource display into the UI
-        if self.page.controls and len(self.page.controls) > 1:
-            resources_container = self.page.controls[1].content.controls[0]
-            if len(resources_container.content.controls) > 1:
-                resources_container.content.controls[1] = resource_display
-            else:
-                resources_container.content.controls.append(resource_display)
-                
-        # Update our reference
-        self.resource_container = resource_display
+        # Create resource display
+        try:
+            resource_display = create_resource_display(
+                self.resources_config,
+                self.resource_values,
+                self.resource_icons,
+                width=380,
+            )
+            self.page.add(resource_display)
+            self.resource_container = resource_display
+            print("Resource display created")
+        except Exception as e:
+            error_text = ft.Text(f"Error creating resource display: {str(e)}", color="red")
+            self.page.add(error_text)
+            print(f"Error creating resource display: {e}")
+        
+        # Add card container to the page
+        self.page.add(self.card_container)
+        
+        # Add instruction text
+        instruction = ft.Text(
+            "Click buttons to make decisions", 
+            size=14, 
+            color="#757575",
+            text_align="center"
+        )
+        self.page.add(instruction)
+        
+        self.page.update()
         
         # Start the game with the first decision
-        self.show_next_decision("start")
+        try:
+            print("Starting game with first decision")
+            self.show_next_decision("start")
+        except Exception as e:
+            error_text = ft.Text(f"Error showing first decision: {str(e)}", color="red")
+            self.page.add(error_text)
+            self.page.update()
+            print(f"Error showing first decision: {e}")
         
     def show_next_decision(self, decision_id: str) -> None:
         """Show the decision with the specified ID"""
+        print(f"Showing decision: {decision_id}")
+        
         # Find the decision with the given ID
         next_decision = None
         for decision in self.decisions:
@@ -131,70 +172,147 @@ class UIManager:
                 break
         
         if not next_decision:
-            print(f"Decision ID '{decision_id}' not found!")
+            error_msg = f"Decision ID '{decision_id}' not found!"
+            print(error_msg)
+            
+            # Show error in UI
+            self.card_container.content = ft.Container(
+                content=ft.Column([
+                    ft.Text("Error", size=20, color="red"),
+                    ft.Text(error_msg)
+                ]),
+                padding=20,
+                bgcolor="#ffebee",
+                border=ft.border.all(1, "red"),
+                border_radius=5
+            )
+            self.page.update()
             return
         
         self.current_decision = next_decision
         
-        # Create the decision card
-        decision_card = create_decision_card(
-            next_decision,
-            on_swipe_left=lambda: self.handle_decision("left"),
-            on_swipe_right=lambda: self.handle_decision("right"),
-        )
+        try:
+            print(f"Creating decision card for: {decision_id}")
+            # Show simple version for debugging
+            self.card_container.content = ft.Container(
+                content=ft.Column([
+                    ft.Text(
+                        value=next_decision.get("text", "Decision text missing"), 
+                        size=18, 
+                        weight="bold",
+                        text_align="center"
+                    ),
+                    ft.Divider(),
+                    ft.Text("Options:", size=16),
+                    ft.ElevatedButton(
+                        text=next_decision.get("left", {}).get("text", "Left option"),
+                        on_click=lambda _: self.handle_decision("left"),
+                        bgcolor="red"
+                    ),
+                    ft.ElevatedButton(
+                        text=next_decision.get("right", {}).get("text", "Right option"),
+                        on_click=lambda _: self.handle_decision("right"),
+                        bgcolor="green"
+                    )
+                ]),
+                padding=20,
+                bgcolor="white",
+                border=ft.border.all(1, "#4a86e8"),
+                border_radius=10,
+                width=350
+            )
+            
+            print("Decision card created and added to container")
+            self.page.update()
         
-        # Update the card container
-        self.card_container.content = decision_card
-        self.page.update()
+        except Exception as e:
+            error_msg = f"Error creating decision card: {str(e)}"
+            print(error_msg)
+            
+            # Show error in UI
+            self.card_container.content = ft.Text(error_msg, color="red")
+            self.page.update()
     
     def handle_decision(self, direction: str) -> None:
         """Handle a decision choice (left or right)"""
+        print(f"Handling decision: {direction}")
+        
         if not self.current_decision:
+            print("No current decision!")
             return
         
-        # Get the effects based on direction
-        choice = self.current_decision.get(direction, {})
-        effects = choice.get("effects", {})
-        next_decision_id = choice.get("next", None)
-        
-        # Apply resource effects
-        for resource_id, change in effects.items():
-            if resource_id in self.resource_values:
-                self.resource_values[resource_id] += change
+        try:
+            # Get the effects based on direction
+            choice = self.current_decision.get(direction, {})
+            effects = choice.get("effects", {})
+            next_decision_id = choice.get("next", None)
+            
+            print(f"Choice: {direction}, Effects: {effects}, Next: {next_decision_id}")
+            
+            # Show a feedback message
+            feedback = ft.Text(
+                f"You chose: {choice.get('text', direction.capitalize())}",
+                size=16,
+                color="blue"
+            )
+            self.card_container.content = ft.Container(
+                content=feedback,
+                padding=20,
+                bgcolor="#e3f2fd",
+                border_radius=10
+            )
+            self.page.update()
+            
+            # Apply resource effects
+            for resource_id, change in effects.items():
+                if resource_id in self.resource_values:
+                    print(f"Changing {resource_id} by {change}")
+                    self.resource_values[resource_id] += change
+                    
+                    # Ensure value is within min/max bounds
+                    if resource_id in self.resources_config:
+                        min_val = self.resources_config[resource_id].get("min", 0)
+                        max_val = self.resources_config[resource_id].get("max", 100)
+                        self.resource_values[resource_id] = max(
+                            min_val, min(max_val, self.resource_values[resource_id])
+                        )
+            
+            # Find the resources section and update it
+            for i, control in enumerate(self.page.controls):
+                if isinstance(control, ft.Text) and control.value == "Resources":
+                    # The next control should be the resource display
+                    if i+1 < len(self.page.controls):
+                        # Create new resource display
+                        try:
+                            resource_display = create_resource_display(
+                                self.resources_config,
+                                self.resource_values,
+                                self.resource_icons,
+                                width=380,
+                            )
+                            # Replace the old one
+                            self.page.controls[i+1] = resource_display
+                            self.page.update()
+                            print("Resource display updated")
+                        except Exception as e:
+                            print(f"Error updating resources: {e}")
+                    break
+            
+            # Check for game over condition
+            if self.check_game_over():
+                self.show_game_over()
+                return
                 
-                # Ensure value is within min/max bounds
-                if resource_id in self.resources_config:
-                    min_val = self.resources_config[resource_id].get("min", 0)
-                    max_val = self.resources_config[resource_id].get("max", 100)
-                    self.resource_values[resource_id] = max(
-                        min_val, min(max_val, self.resource_values[resource_id])
-                    )
-        
-        # Update the resource display by recreating it
-        resource_display = create_resource_display(
-            self.resources_config,
-            self.resource_values,
-            self.resource_icons,
-            width=380,
-        )
-        
-        # Replace the old display
-        if self.page.controls and len(self.page.controls) > 1:
-            resources_container = self.page.controls[1].content.controls[0]
-            if len(resources_container.content.controls) > 1:
-                resources_container.content.controls[1] = resource_display
-            
-        # Update our reference
-        self.resource_container = resource_display
-        
-        # Check for game over condition
-        if self.check_game_over():
-            self.show_game_over()
-            return
-            
-        # Show the next decision after a short delay
-        if next_decision_id:
-            self.page.after(1000, lambda: self.show_next_decision(next_decision_id))
+            # Show the next decision after a short delay
+            if next_decision_id:
+                print(f"Will show next decision: {next_decision_id} after delay")
+                self.page.after(1000, lambda: self.show_next_decision(next_decision_id))
+                
+        except Exception as e:
+            error_msg = f"Error handling decision: {str(e)}"
+            print(error_msg)
+            self.card_container.content = ft.Text(error_msg, color="red")
+            self.page.update()
     
     def check_game_over(self) -> bool:
         """Check if the game has ended"""
