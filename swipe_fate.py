@@ -21,7 +21,7 @@ if __name__ == "__main__":
     args = parse_args()
     
     # Import after argument parsing
-    from src.swipe_fate.main import main
+    from swipe_fate.main import main
     
     print(f"Starting SwipeFate on {args.host}:{args.port}")
     ft.app(target=main, host=args.host, port=args.port, view=ft.AppView.WEB_BROWSER)
