@@ -13,7 +13,7 @@ authors = [
     {name = "Michael Borck"}
 ]
 dependencies = [
-    "flet[all]>=0.27.0",
+    "flet>=0.7.0",  # Using basic version for maximum compatibility
 ]
 
 [project.optional-dependencies]
@@ -25,8 +25,7 @@ dev = [
     "pytest-cov>=4.1.0",
 ]
 
-[project.scripts]
-swipe-fate = "swipe_fate.main:main"
+# We'll use the swipe_fate.py script directly instead of an entry point
 
 [tool.ruff]
 line-length = 100

@@ -1,6 +1,8 @@
 # SwipeFate
 
-SwipeFate is a versatile simulation game built using the Flet framework, which allows you to write your application in Python and deploy it seamlessly across the web, Android, iOS, and desktop platforms. The simulator enable dynamic switching between game themes and mechanics via externally loaded JSON configuration files. The application is cross-platform and can run as a web app, desktop app, or on mobile devices.
+A card-based decision game with swipe mechanics, built with Flet.
+
+SwipeFate is a game where you face a series of decisions presented on cards that you can swipe left or right. Each decision affects various resources, and you need to balance them to survive. The application is cross-platform and can run as a web app, desktop app, or on mobile devices.
 
 ## Features
 
@@ -66,20 +68,11 @@ SwipeFate/
 
 To start the game in a web browser, run the following command in the terminal:
 ```bash
-# Using the convenience script
-./run_swipe_fate.py --web
+# Run with default settings (localhost:8000)
+python swipe_fate.py
 
-# Or using flet directly
-flet src/swipe_fate/main.py --web
-```
-
-To run as a desktop application:
-```bash
-# Using the convenience script
-./run_swipe_fate.py
-
-# Or using flet directly
-flet src/swipe_fate/main.py
+# Run on specific host and port (for remote access)
+python swipe_fate.py --host 0.0.0.0 --port 9000
 ```
 
 ### Development Tools
