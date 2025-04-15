@@ -1,32 +1,242 @@
 {
-  "theme": "Space Exploration",
+  "metadata": {
+    "name": "Deep Space Explorer",
+    "version": "1.0",
+    "author": "SwipeFate Team",
+    "description": "Navigate the challenges of interstellar exploration and survive the journey"
+  },
   "resources": {
-    "fuel": 100,
-    "food": 200,
-    "money": 150
+    "fuel": {
+      "initial": 100,
+      "min": 0,
+      "max": 200,
+      "display_name": "Fuel Reserves"
+    },
+    "oxygen": {
+      "initial": 100,
+      "min": 0,
+      "max": 100,
+      "display_name": "Oxygen Supply"
+    },
+    "crew_morale": {
+      "initial": 80,
+      "min": 0,
+      "max": 100,
+      "display_name": "Crew Morale"
+    },
+    "ship_integrity": {
+      "initial": 90,
+      "min": 0,
+      "max": 100,
+      "display_name": "Ship Integrity"
+    },
+    "scientific_data": {
+      "initial": 0,
+      "min": 0,
+      "max": 1000,
+      "display_name": "Scientific Data"
+    }
   },
   "decisions": [
     {
-      "description": "Explore the nearby asteroid for resources?",
-      "effects": {
-        "fuel": -20,
-        "findings": { "random": ["ore", "ice", "nothing"] }
+      "id": "start",
+      "text": "Your ship detects an uncharted asteroid field ahead. How do you proceed?",
+      "left": {
+        "text": "Navigate through carefully (slower but safer)",
+        "effects": {
+          "fuel": -15,
+          "scientific_data": +10
+        },
+        "next": "strange_signal"
+      },
+      "right": {
+        "text": "Plot a course around it (faster but uses more fuel)",
+        "effects": {
+          "fuel": -30
+        },
+        "next": "strange_signal"
       }
     },
     {
-      "description": "Trade with the alien vessel?",
-      "effects": {
-        "food": -10,
-        "money": 30
+      "id": "strange_signal",
+      "text": "You detect a strange signal coming from a nearby planetoid. It's not on any chart.",
+      "left": {
+        "text": "Investigate the signal",
+        "effects": {
+          "fuel": -10,
+          "scientific_data": +30,
+          "crew_morale": -5
+        },
+        "next": "alien_artifact"
+      },
+      "right": {
+        "text": "Continue on your primary mission",
+        "effects": {
+          "crew_morale": +5
+        },
+        "next": "supply_decision"
+      }
+    },
+    {
+      "id": "alien_artifact",
+      "text": "You've discovered an alien artifact! It seems to be still active.",
+      "left": {
+        "text": "Bring it aboard for study",
+        "effects": {
+          "scientific_data": +50,
+          "ship_integrity": -10
+        },
+        "next": "artifact_effect"
+      },
+      "right": {
+        "text": "Take readings from a distance",
+        "effects": {
+          "scientific_data": +20
+        },
+        "next": "supply_decision"
+      }
+    },
+    {
+      "id": "artifact_effect",
+      "text": "The artifact has started interfering with ship systems!",
+      "left": {
+        "text": "Eject it into space immediately",
+        "effects": {
+          "ship_integrity": -5
+        },
+        "next": "supply_decision"
+      },
+      "right": {
+        "text": "Try to contain and study it",
+        "effects": {
+          "ship_integrity": -15,
+          "scientific_data": +100
+        },
+        "next": "supply_decision"
+      }
+    },
+    {
+      "id": "supply_decision",
+      "text": "Your supplies are running low. A trading outpost is nearby, but it's known for high prices.",
+      "left": {
+        "text": "Dock and resupply",
+        "effects": {
+          "fuel": +40,
+          "oxygen": +30,
+          "crew_morale": +15
+        },
+        "next": "space_anomaly"
+      },
+      "right": {
+        "text": "Continue with current supplies",
+        "effects": {
+          "crew_morale": -10
+        },
+        "next": "space_anomaly"
+      }
+    },
+    {
+      "id": "space_anomaly",
+      "text": "You encounter a space anomaly that's bending light around it. Sensors can't determine what it is.",
+      "left": {
+        "text": "Approach closer for better readings",
+        "effects": {
+          "scientific_data": +70,
+          "ship_integrity": -20,
+          "fuel": -10
+        },
+        "next": "mission_complete"
+      },
+      "right": {
+        "text": "Keep a safe distance and record observations",
+        "effects": {
+          "scientific_data": +30,
+          "fuel": -5
+        },
+        "next": "mission_complete"
+      }
+    },
+    {
+      "id": "mission_complete",
+      "text": "Your primary mission is complete. The return journey will be long.",
+      "left": {
+        "text": "Take a direct route home",
+        "effects": {
+          "fuel": -40,
+          "crew_morale": +10
+        },
+        "next": "end"
+      },
+      "right": {
+        "text": "Plot a course with additional research stops",
+        "effects": {
+          "fuel": -60,
+          "scientific_data": +100,
+          "crew_morale": -10
+        },
+        "next": "end"
+      }
+    },
+    {
+      "id": "end",
+      "text": "Your mission has concluded. Time to analyze the results.",
+      "left": {
+        "text": "End Mission",
+        "effects": {},
+        "next": "start"
+      },
+      "right": {
+        "text": "End Mission",
+        "effects": {},
+        "next": "start"
       }
     }
   ],
   "events": [
     {
-      "name": "Solar Flare",
+      "id": "solar_flare",
+      "trigger": {
+        "type": "random",
+        "probability": 0.2
+      },
+      "text": "A solar flare has damaged some ship systems!",
       "effects": {
-        "fuel": -10
+        "ship_integrity": -10,
+        "oxygen": -5
+      }
+    },
+    {
+      "id": "crew_conflict",
+      "trigger": {
+        "type": "resource",
+        "resource": "crew_morale",
+        "condition": "less_than",
+        "value": 30
+      },
+      "text": "Low morale has led to conflicts among the crew!",
+      "effects": {
+        "crew_morale": -10
+      }
+    },
+    {
+      "id": "oxygen_leak",
+      "trigger": {
+        "type": "resource",
+        "resource": "ship_integrity",
+        "condition": "less_than",
+        "value": 40
+      },
+      "text": "Ship damage has caused an oxygen leak!",
+      "effects": {
+        "oxygen": -20
       }
     }
-  ]
+  ],
+  "themes": {
+    "default": {
+      "background_color": "#0a1128",
+      "text_color": "#cad2c5",
+      "accent_color": "#7b2cbf"
+    }
+  }
 }

@@ -1,103 +1,284 @@
 {
+  "metadata": {
+    "name": "Startup Simulator",
+    "version": "1.0",
+    "author": "SwipeFate Team",
+    "description": "Build your startup from zero to IPO"
+  },
   "resources": {
-    "money": 100,
-    "popularity": 50,
-    "staff": 10,
-    "inventory": 20
+    "money": {
+      "initial": 10000,
+      "min": 0,
+      "max": 1000000,
+      "display_name": "Capital"
+    },
+    "reputation": {
+      "initial": 20,
+      "min": 0,
+      "max": 100,
+      "display_name": "Market Reputation"
+    },
+    "staff": {
+      "initial": 1,
+      "min": 1,
+      "max": 500,
+      "display_name": "Team Size"
+    },
+    "product_quality": {
+      "initial": 30,
+      "min": 0,
+      "max": 100,
+      "display_name": "Product Quality"
+    },
+    "user_base": {
+      "initial": 0,
+      "min": 0,
+      "max": 1000000,
+      "display_name": "Active Users"
+    }
   },
   "decisions": [
     {
-      "id": "decision001",
-      "description": "Invest in new technology?",
-      "swipeLeft": {
+      "id": "start",
+      "text": "You're starting your tech company. What's your first focus?",
+      "left": {
+        "text": "Product quality (build something amazing)",
         "effects": {
-          "money": -20,
-          "popularity": 5,
-          "inventory": 10
+          "money": -5000,
+          "product_quality": +20
         },
-        "message": "You invested in technology, gaining popularity but losing money."
+        "next": "hiring"
       },
-      "swipeRight": {
+      "right": {
+        "text": "User acquisition (get customers fast)",
         "effects": {
-          "money": -15,
-          "popularity": -5,
-          "staff": 2,
-          "inventory": -5
+          "money": -3000,
+          "user_base": +500,
+          "product_quality": +5
         },
-        "message": "You cautiously invested in technology, affecting multiple resources."
-      },
-      "icon": "url_to_icon",
-      "theme": "technology"
+        "next": "hiring"
+      }
     },
     {
-      "id": "decision002",
-      "description": "Expand into new markets?",
-      "swipeLeft": {
+      "id": "hiring",
+      "text": "Time to make your first key hire. Who do you prioritize?",
+      "left": {
+        "text": "Senior developer (product focus)",
         "effects": {
-          "money": -50,
-          "popularity": 10,
-          "staff": 5,
-          "inventory": 15
+          "money": -4000,
+          "staff": +1,
+          "product_quality": +15
         },
-        "message": "Expansion was costly but brought significant gains."
+        "next": "investment"
       },
-      "swipeRight": {
+      "right": {
+        "text": "Marketing specialist (growth focus)",
         "effects": {
-          "money": 30,
-          "popularity": -10,
-          "staff": -3,
-          "inventory": 20
+          "money": -3500,
+          "staff": +1,
+          "user_base": +1000,
+          "reputation": +10
         },
-        "message": "You earned money but at the cost of popularity and staff."
-      },
-      "icon": "url_to_icon",
-      "theme": "expansion"
-    }
-  ],
-  "rules": [
-    {
-      "id": "rule001",
-      "name": "Maintain Profit Margin",
-      "condition": "resources.money / resources.time < 0.8",
-      "action": "increase_resources('money', 10)"
+        "next": "investment"
+      }
     },
     {
-      "id": "rule002",
-      "name": "Invest in Employee Training",
-      "condition": "resources.staff < 80",
-      "action": "increase_resources('skills', 5)"
+      "id": "investment",
+      "text": "A venture capital firm is interested in your startup. What's your approach?",
+      "left": {
+        "text": "Accept large investment for aggressive growth",
+        "effects": {
+          "money": +100000,
+          "reputation": +5
+        },
+        "next": "scaling"
+      },
+      "right": {
+        "text": "Bootstrap and maintain full control",
+        "effects": {
+          "money": +5000,
+          "reputation": +15,
+          "product_quality": +10
+        },
+        "next": "scaling"
+      }
+    },
+    {
+      "id": "scaling",
+      "text": "Your user base is growing. How do you handle scaling?",
+      "left": {
+        "text": "Invest in robust infrastructure now",
+        "effects": {
+          "money": -20000,
+          "product_quality": +25,
+          "user_base": +5000
+        },
+        "next": "competition"
+      },
+      "right": {
+        "text": "Scale as needed (more gradual approach)",
+        "effects": {
+          "money": -5000,
+          "product_quality": +5,
+          "user_base": +2000
+        },
+        "next": "competition"
+      }
+    },
+    {
+      "id": "competition",
+      "text": "A major competitor has entered your market. How do you respond?",
+      "left": {
+        "text": "Aggressively compete on features",
+        "effects": {
+          "money": -30000,
+          "product_quality": +30,
+          "staff": +5,
+          "reputation": +10
+        },
+        "next": "crisis"
+      },
+      "right": {
+        "text": "Focus on a niche market segment",
+        "effects": {
+          "money": -10000,
+          "product_quality": +15,
+          "reputation": +20,
+          "user_base": -1000
+        },
+        "next": "crisis"
+      }
+    },
+    {
+      "id": "crisis",
+      "text": "Your product has a major bug affecting users. How do you handle it?",
+      "left": {
+        "text": "All hands on deck - fix immediately",
+        "effects": {
+          "money": -15000,
+          "product_quality": +20,
+          "reputation": +5
+        },
+        "next": "expansion"
+      },
+      "right": {
+        "text": "Issue statement and fix gradually",
+        "effects": {
+          "money": -5000,
+          "product_quality": +10,
+          "reputation": -15,
+          "user_base": -2000
+        },
+        "next": "expansion"
+      }
+    },
+    {
+      "id": "expansion",
+      "text": "Your company is doing well. What's your next move?",
+      "left": {
+        "text": "Expand to international markets",
+        "effects": {
+          "money": -50000,
+          "staff": +10,
+          "user_base": +20000,
+          "reputation": +15
+        },
+        "next": "exit"
+      },
+      "right": {
+        "text": "Develop new product line",
+        "effects": {
+          "money": -40000,
+          "staff": +8,
+          "product_quality": +25,
+          "user_base": +10000
+        },
+        "next": "exit"
+      }
+    },
+    {
+      "id": "exit",
+      "text": "Your startup has matured. What's your exit strategy?",
+      "left": {
+        "text": "IPO (go public)",
+        "effects": {
+          "money": +500000,
+          "reputation": +30,
+          "staff": +20
+        },
+        "next": "end"
+      },
+      "right": {
+        "text": "Acquisition offer from tech giant",
+        "effects": {
+          "money": +300000,
+          "reputation": +10,
+          "staff": -5
+        },
+        "next": "end"
+      }
+    },
+    {
+      "id": "end",
+      "text": "Congratulations on your entrepreneurial journey!",
+      "left": {
+        "text": "Start New Game",
+        "effects": {},
+        "next": "start"
+      },
+      "right": {
+        "text": "Start New Game",
+        "effects": {},
+        "next": "start"
+      }
     }
   ],
   "events": [
     {
-      "id": "event001",
-      "name": "New Business Opportunity",
-      "trigger": "random_chance(0.1)",
-      "effects": {
-        "money": 50
+      "id": "viral_content",
+      "trigger": {
+        "type": "random",
+        "probability": 0.15
       },
-      "message": "A new business opportunity has unexpectedly increased your funds!"
+      "text": "Your product went viral on social media!",
+      "effects": {
+        "user_base": +3000,
+        "reputation": +15
+      }
     },
     {
-      "id": "event002",
-      "name": "Supply Chain Disruption",
-      "trigger": "random_chance(0.15)",
-      "effects": {
-        "money": -30
+      "id": "tech_breakthrough",
+      "trigger": {
+        "type": "resource",
+        "resource": "product_quality",
+        "condition": "greater_than",
+        "value": 70
       },
-      "message": "Your supply chain faced disruptions, causing a significant financial loss."
+      "text": "Your team had a major technological breakthrough!",
+      "effects": {
+        "product_quality": +10,
+        "reputation": +5
+      }
+    },
+    {
+      "id": "staff_departure",
+      "trigger": {
+        "type": "random",
+        "probability": 0.1
+      },
+      "text": "A key team member left for a competitor.",
+      "effects": {
+        "staff": -1,
+        "product_quality": -5,
+        "reputation": -5
+      }
     }
   ],
   "themes": {
-    "technology": {
-      "base_chance": 0.3,
-      "active": true,
-      "decisions": ["decision001"]
-    },
-    "expansion": {
-      "base_chance": 0.2,
-      "active": false,
-      "decisions": ["decision002"]
+    "default": {
+      "background_color": "#ffffff",
+      "text_color": "#333333",
+      "accent_color": "#4a86e8"
     }
   }
 }

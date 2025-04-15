@@ -117,6 +117,15 @@ Configuration files are located in the `configs/` directory:
 - `business.json`: Configures the game for a business management scenario.
 - `space_exploration.json`: Sets up a space exploration adventure.
 
+## Documentation
+
+Comprehensive documentation is available in the [docs/](docs/) directory:
+
+- [Technical Documentation](docs/technical.md) - System architecture and implementation
+- [Design Document](docs/design.md) - Game concept and design principles
+- [Game Configuration Guide](docs/game-config.md) - Creating your own game themes
+- [Development Roadmap](docs/roadmap.md) - Planned features and priorities
+
 ## Contributing
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
