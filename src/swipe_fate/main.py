@@ -15,12 +15,13 @@ def main(page: ft.Page):
     page.add(header)
     
     # Create a container for content
+    # Using simpler properties for older flet versions
     content_area = ft.Container(
         content=None,
         padding=20,
         width=600,
-        bgcolor="#f0f0f0",
-        border_radius=10
+        bgcolor="#f0f0f0"
+        # Removed border_radius for compatibility
     )
     page.add(content_area)
     
@@ -56,11 +57,15 @@ def main(page: ft.Page):
             width=200
         )
         
-        content_area.content = ft.Column(
-            controls=[selection_text, button1, button2],
-            spacing=20,
-            alignment="center"
-        )
+        # Simple column alignment for older flet versions
+        content_area.content = ft.Column([
+            selection_text,
+            # Add spacer for centering
+            ft.Container(height=20),
+            button1,
+            ft.Container(height=10),
+            button2
+        ])
         page.update()
     
     # Game state variables
@@ -135,31 +140,35 @@ def main(page: ft.Page):
             spacing=5
         )
         
-        # Create decision card
+        # Create decision card - simplified for older flet versions
         decision_card = ft.Container(
             content=ft.Column([
                 ft.Text(value=decision_text, size=20, weight="bold"),
                 ft.Divider(),
                 ft.Text(value="Options:", size=16),
-                ft.Row([
-                    ft.ElevatedButton(
-                        text=left_option,
-                        bgcolor="red",
-                        color="white",
-                        on_click=lambda _: handle_choice(decision, "left", resources)
-                    ),
-                    ft.ElevatedButton(
-                        text=right_option,
-                        bgcolor="green",
-                        color="white",
-                        on_click=lambda _: handle_choice(decision, "right", resources)
-                    )
-                ], alignment="spaceAround")
+                # Use container with margin instead of Row with alignment
+                ft.Container(
+                    content=ft.Row([
+                        ft.ElevatedButton(
+                            text=left_option,
+                            bgcolor="red",
+                            color="white",
+                            on_click=lambda _: handle_choice(decision, "left", resources)
+                        ),
+                        ft.Container(width=20),  # Spacer between buttons
+                        ft.ElevatedButton(
+                            text=right_option,
+                            bgcolor="green",
+                            color="white",
+                            on_click=lambda _: handle_choice(decision, "right", resources)
+                        )
+                    ]),
+                    margin=10
+                )
             ]),
             padding=20,
-            bgcolor="white",
-            border=ft.border.all(1, "blue"),
-            border_radius=10
+            bgcolor="white"
+            # Removed border and border_radius for compatibility
         )
         
         # Combine everything
