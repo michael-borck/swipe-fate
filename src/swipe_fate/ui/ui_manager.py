@@ -2,8 +2,8 @@ import flet as ft
 from typing import Dict, Any, Callable, Optional, List
 from swipe_fate.core.game_state import GameState
 from swipe_fate.core.event import Event
-from swipe_fate.ui.decision_card import DecisionCard
-from swipe_fate.ui.resource_display import ResourceDisplay
+from swipe_fate.ui.decision_card import create_decision_card
+from swipe_fate.ui.resource_display import create_resource_display
 
 class UIManager:
     def __init__(self, page: ft.Page, game_state: GameState) -> None:
@@ -16,8 +16,8 @@ class UIManager:
         self.decisions: List[Dict[str, Any]] = []
         
         # UI components
-        self.card_container = ft.Container(padding=20, alignment=ft.alignment.center)
-        self.resource_display: Optional[ResourceDisplay] = None
+        self.card_container = ft.Container(padding=20, alignment="center")
+        self.resource_container = ft.Container()
         self.game_over_dialog: Optional[ft.AlertDialog] = None
         
         # Application state
@@ -99,7 +99,7 @@ class UIManager:
         self.page.bgcolor = self.game_theme.get("background_color", "#f0f0f0")
         
         # Create resource display
-        self.resource_display = ResourceDisplay(
+        resource_display = create_resource_display(
             self.resources_config,
             self.resource_values,
             self.resource_icons,
@@ -110,9 +110,12 @@ class UIManager:
         if self.page.controls and len(self.page.controls) > 1:
             resources_container = self.page.controls[1].content.controls[0]
             if len(resources_container.content.controls) > 1:
-                resources_container.content.controls[1] = self.resource_display
+                resources_container.content.controls[1] = resource_display
             else:
-                resources_container.content.controls.append(self.resource_display)
+                resources_container.content.controls.append(resource_display)
+                
+        # Update our reference
+        self.resource_container = resource_display
         
         # Start the game with the first decision
         self.show_next_decision("start")
@@ -133,7 +136,7 @@ class UIManager:
         self.current_decision = next_decision
         
         # Create the decision card
-        decision_card = DecisionCard(
+        decision_card = create_decision_card(
             next_decision,
             on_swipe_left=lambda: self.handle_decision("left"),
             on_swipe_right=lambda: self.handle_decision("right"),
@@ -166,9 +169,22 @@ class UIManager:
                         min_val, min(max_val, self.resource_values[resource_id])
                     )
         
-        # Update the resource display
-        if self.resource_display:
-            self.resource_display.update_resources(self.resource_values)
+        # Update the resource display by recreating it
+        resource_display = create_resource_display(
+            self.resources_config,
+            self.resource_values,
+            self.resource_icons,
+            width=380,
+        )
+        
+        # Replace the old display
+        if self.page.controls and len(self.page.controls) > 1:
+            resources_container = self.page.controls[1].content.controls[0]
+            if len(resources_container.content.controls) > 1:
+                resources_container.content.controls[1] = resource_display
+            
+        # Update our reference
+        self.resource_container = resource_display
         
         # Check for game over condition
         if self.check_game_over():
@@ -226,9 +242,22 @@ class UIManager:
         for resource_id, resource_info in self.resources_config.items():
             self.resource_values[resource_id] = resource_info.get("initial", 0)
         
-        # Update resource display
-        if self.resource_display:
-            self.resource_display.update_resources(self.resource_values, highlight_changes=False)
+        # Update the resource display by recreating it
+        resource_display = create_resource_display(
+            self.resources_config,
+            self.resource_values,
+            self.resource_icons,
+            width=380,
+        )
+        
+        # Replace the old display
+        if self.page.controls and len(self.page.controls) > 1:
+            resources_container = self.page.controls[1].content.controls[0]
+            if len(resources_container.content.controls) > 1:
+                resources_container.content.controls[1] = resource_display
+            
+        # Update our reference
+        self.resource_container = resource_display
         
         # Start with the first decision
         self.show_next_decision("start")
