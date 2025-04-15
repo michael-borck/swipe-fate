@@ -100,7 +100,7 @@ def main(page: ft.Page):
             
             # Start the game with first decision
             if decisions:
-                show_decision(decisions[0], resources)
+                show_decision(decisions[0], current_resources)
             else:
                 content_area.content = ft.Text(value="No decisions found in game data", size=20, color="red")
                 page.update()
