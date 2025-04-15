@@ -8,8 +8,10 @@ import json
 import re
 from typing import Dict, Any, List, Optional
 
-class SimpleGameUI:
-    """Simple UI implementation for SwipeFate that works on all Flet versions"""
+from swipe_fate.ui.modern_card import SwipeCard
+
+class GameUI:
+    """Modern UI implementation for SwipeFate"""
     
     def __init__(self, page: ft.Page):
         """Initialize the game UI"""
@@ -29,11 +31,18 @@ class SimpleGameUI:
     def setup_page(self):
         """Set up page properties"""
         self.page.title = "SwipeFate"
-        self.page.bgcolor = "#f0f0f0"
-        self.page.padding = 10
+        self.page.bgcolor = ft.colors.BLUE_GREY_50
+        self.page.padding = 0
         self.page.window_width = 400
         self.page.window_height = 800
         self.page.window_resizable = True
+        self.page.window_maximizable = True
+        self.page.theme_mode = ft.ThemeMode.SYSTEM
+        
+        # Set up fonts
+        self.page.fonts = {
+            "Roboto": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap",
+        }
         
     def show_game_selection(self):
         """Show the game selection screen"""
@@ -269,72 +278,13 @@ class SimpleGameUI:
         
         self.current_decision = decision
         
-        # Extract decision data
-        decision_text = decision.get("text", "Make a decision")
-        left_option = decision.get("left", {}).get("text", "Left option")
-        right_option = decision.get("right", {}).get("text", "Right option")
-        image_url = decision.get("image_url", None)
-        
-        # Create decision card
-        card_content = []
-        
-        # Add image if available
-        if image_url:
-            card_content.append(
-                ft.Image(
-                    src=image_url,
-                    width=350,
-                    height=200,
-                    fit="cover"
-                )
-            )
-        
-        # Add decision text
-        card_content.append(
-            ft.Container(
-                content=ft.Text(
-                    value=decision_text,
-                    size=20,
-                    weight="bold",
-                    text_align="center"
-                ),
-                padding=15
-            )
-        )
-        
-        # Add buttons
-        card_content.append(
-            ft.Row(
-                controls=[
-                    ft.ElevatedButton(
-                        text=left_option,
-                        on_click=lambda _: self.handle_decision("left"),
-                        bgcolor="#f44336",
-                        color="white",
-                        expand=1
-                    ),
-                    ft.ElevatedButton(
-                        text=right_option,
-                        on_click=lambda _: self.handle_decision("right"),
-                        bgcolor="#4caf50",
-                        color="white",
-                        expand=1
-                    )
-                ],
-                spacing=10,
-                alignment="center"
-            )
-        )
-        
-        # Create the card
-        decision_card = ft.Card(
-            content=ft.Column(
-                controls=card_content,
-                horizontal_alignment="center"
-            ),
+        # Create a swipeable card using our modern component
+        swipe_card = SwipeCard(
+            card_data=decision,
+            on_swipe_left=lambda: self.handle_decision("left"),
+            on_swipe_right=lambda: self.handle_decision("right"),
             width=350,
-            elevation=5,
-            margin=10
+            height=450
         )
         
         # Add or replace the decision card
@@ -343,8 +293,15 @@ class SimpleGameUI:
         
         self.page.add(
             ft.Container(
-                content=decision_card,
-                alignment="center",
+                content=ft.Column(
+                    controls=[
+                        swipe_card,
+                        ft.Container(height=10),
+                        swipe_card.add_button_controls()  # Add buttons for non-touch devices
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                ),
+                alignment=ft.alignment.center,
                 margin=ft.margin.only(top=20)
             )
         )
@@ -534,8 +491,8 @@ class SimpleGameUI:
 
 def main(page: ft.Page):
     """Main entry point for the application"""
-    # Use the simple UI which is compatible with all Flet versions
-    SimpleGameUI(page)
+    # Use the modern UI implementation
+    GameUI(page)
 
 if __name__ == "__main__":
     ft.app(target=main)

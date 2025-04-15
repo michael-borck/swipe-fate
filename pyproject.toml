@@ -13,7 +13,7 @@ authors = [
     {name = "Michael Borck"}
 ]
 dependencies = [
-    "flet>=0.7.0",  # Using basic version for maximum compatibility
+    "flet>=0.27.0",  # Using latest version for best features and performance
 ]
 
 [project.optional-dependencies]
