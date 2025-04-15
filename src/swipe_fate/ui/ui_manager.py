@@ -37,10 +37,10 @@ class UIManager:
         
         # Header with game title
         header = ft.Container(
-            content=ft.Text("SwipeFate", size=24, weight=ft.FontWeight.BOLD, color=ft.colors.WHITE),
+            content=ft.Text("SwipeFate", size=24, weight="bold", color="white"),
             padding=15,
             bgcolor=self.game_theme.get("accent_color", "#4a86e8"),
-            alignment=ft.alignment.center,
+            alignment="center",
         )
         
         # Main content
@@ -48,8 +48,9 @@ class UIManager:
             # Top section with resources
             ft.Container(
                 content=ft.Column([
-                    ft.Text("Resources", size=18, weight=ft.FontWeight.BOLD),
+                    ft.Text("Resources", size=18, weight="bold"),
                     # Resource display will be added here
+                    ft.Text("Loading game...", color="black", size=14, italic=True),
                 ]),
                 padding=10,
             ),
@@ -60,15 +61,15 @@ class UIManager:
             # Bottom section with game info
             ft.Container(
                 content=ft.Column([
-                    ft.Text("Swipe left or right to make decisions", 
+                    ft.Text("Click buttons to make decisions", 
                             size=14, 
-                            color=ft.colors.BLACK54,
-                            text_align=ft.TextAlign.CENTER),
+                            color="#757575",
+                            text_align="center"),
                 ]),
                 padding=10,
-                alignment=ft.alignment.center,
+                alignment="center",
             ),
-        ], alignment=ft.MainAxisAlignment.START, expand=True)
+        ], alignment="start", expand=True)
         
         # Add all elements to the page
         self.page.add(

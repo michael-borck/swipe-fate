@@ -29,49 +29,88 @@ class CoreEngine:
         
     def show_game_selection(self) -> None:
         """Show dialog to select a game configuration"""
+        # Try a different approach - add buttons directly to the page
+        print("Showing game selection options...")
+        
+        # Clear existing content
+        self.card_container.content = None
+        
         # Create buttons for available configurations
         business_btn = ft.ElevatedButton(
-            "Business Simulator",
-            icon=ft.icons.BUSINESS,
-            on_click=lambda _: self.load_configuration("configs/business.json")
+            text="Business Simulator",
+            icon="business",
+            on_click=lambda e: self.load_configuration("configs/business.json"),
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: "white"},
+                bgcolor={ft.MaterialState.DEFAULT: "#4a86e8"},
+                padding=20,
+            ),
+            width=300,
         )
         
         space_btn = ft.ElevatedButton(
-            "Space Explorer",
-            icon=ft.icons.ROCKET_LAUNCH,
-            on_click=lambda _: self.load_configuration("configs/space_exploration.json")
+            text="Space Explorer",
+            icon="rocket_launch",
+            on_click=lambda e: self.load_configuration("configs/space_exploration.json"),
+            style=ft.ButtonStyle(
+                color={ft.MaterialState.DEFAULT: "white"},
+                bgcolor={ft.MaterialState.DEFAULT: "#7b2cbf"},
+                padding=20,
+            ),
+            width=300,
         )
         
-        # Create the dialog
-        dialog = ft.AlertDialog(
-            title=ft.Text("Choose a Game"),
-            content=ft.Column([
-                ft.Text("Select which game you want to play:"),
-                business_btn,
-                space_btn,
-            ], tight=True, spacing=20),
-        )
+        # Create selection UI
+        selection_ui = ft.Column([
+            ft.Text("Choose a Game", size=24, weight="bold"),
+            ft.Text("Select which game you want to play:", size=16),
+            ft.Container(height=20),  # Spacer
+            business_btn,
+            ft.Container(height=10),  # Spacer
+            space_btn,
+        ],
+        alignment="center",
+        horizontal_alignment="center",
+        spacing=10)
         
-        # Show the dialog
-        self.page.dialog = dialog
-        dialog.open = True
+        # Add to card container
+        self.card_container.content = selection_ui
         self.page.update()
         
     def load_configuration(self, config_path: str) -> None:
         """Load a game configuration file"""
-        # Close the dialog if it's open
-        if self.page.dialog and self.page.dialog.open:
-            self.page.dialog.open = False
-            self.page.update()
+        print(f"Loading configuration from {config_path}...")
         
-        # Load the configuration file
-        loader = ResourceLoader(config_path)
-        self.config_data = loader.data
-        
-        # Initialize the UI with the loaded configuration
-        self.ui_manager.initialize_game(self.config_data)
-        
+        # Show a simple loading message
+        self.card_container.content = ft.Text("Loading game...", size=20)
         self.page.update()
+        
+        try:
+            # Load the configuration file
+            loader = ResourceLoader(config_path)
+            self.config_data = loader.data
+            
+            print(f"Configuration loaded successfully: {len(self.config_data)} entries")
+            
+            # Initialize the UI with the loaded configuration
+            self.ui_manager.initialize_game(self.config_data)
+            
+            self.page.update()
+            print("Game initialized successfully")
+        except Exception as e:
+            # Show error message
+            error_text = f"Error loading game: {str(e)}"
+            print(error_text)
+            
+            self.card_container.content = ft.Column([
+                ft.Text("Error Loading Game", size=20, color="red"),
+                ft.Text(error_text, size=14),
+                ft.ElevatedButton(
+                    text="Try Again",
+                    on_click=lambda _: self.show_game_selection()
+                )
+            ])
+            self.page.update()
     
     def handle_resource_changed(self, event: Event) -> None:
         """Handle resource changed events"""
