@@ -8,7 +8,7 @@ import json
 import re
 from typing import Dict, Any, List, Optional
 
-from swipe_fate.ui.modern_card import SwipeCard
+from src.swipe_fate.ui.modern_card import SwipeCard
 
 class GameUI:
     """Modern UI implementation for SwipeFate"""
