@@ -193,34 +193,75 @@ class UIManager:
         
         try:
             print(f"Creating decision card for: {decision_id}")
-            # Show simple version for debugging
-            self.card_container.content = ft.Container(
-                content=ft.Column([
-                    ft.Text(
-                        value=next_decision.get("text", "Decision text missing"), 
-                        size=18, 
-                        weight="bold",
-                        text_align="center"
-                    ),
-                    ft.Divider(),
-                    ft.Text("Options:", size=16),
-                    ft.ElevatedButton(
-                        text=next_decision.get("left", {}).get("text", "Left option"),
-                        on_click=lambda _: self.handle_decision("left"),
-                        bgcolor="red"
-                    ),
-                    ft.ElevatedButton(
-                        text=next_decision.get("right", {}).get("text", "Right option"),
-                        on_click=lambda _: self.handle_decision("right"),
-                        bgcolor="green"
-                    )
-                ]),
+            
+            # Create a super simple debug card first
+            debug_card = ft.Container(
+                content=ft.Text(value="TESTING CARD RENDERING", color="red", size=30),
+                padding=20,
+                bgcolor="yellow",
+                border=ft.border.all(2, "red"),
+                width=300,
+                height=100
+            )
+            
+            # Update with debug card
+            self.card_container.content = debug_card
+            self.page.update()
+            print("Debug card added")
+            
+            # Get option texts
+            left_text = next_decision.get("left", {}).get("text", "Left option")
+            right_text = next_decision.get("right", {}).get("text", "Right option")
+            decision_text = next_decision.get("text", "Decision text missing")
+            
+            print(f"Decision text: {decision_text}")
+            print(f"Left option: {left_text}")
+            print(f"Right option: {right_text}")
+            
+            # Create each widget separately to debug
+            title = ft.Text(value=decision_text, size=18, color="black")
+            divider = ft.Divider()
+            options_label = ft.Text(value="Options:", size=16, color="black")
+            
+            left_button = ft.ElevatedButton(
+                text=left_text,
+                on_click=lambda _: self.handle_decision("left"),
+                bgcolor="red", 
+                color="white"
+            )
+            
+            right_button = ft.ElevatedButton(
+                text=right_text,
+                on_click=lambda _: self.handle_decision("right"),
+                bgcolor="green",
+                color="white"
+            )
+            
+            # Build decision column
+            decision_column = ft.Column(
+                controls=[
+                    title,
+                    divider,
+                    options_label,
+                    left_button,
+                    right_button
+                ]
+            )
+            
+            # Update with column
+            final_card = ft.Container(
+                content=decision_column,
                 padding=20,
                 bgcolor="white",
                 border=ft.border.all(1, "#4a86e8"),
                 border_radius=10,
                 width=350
             )
+            
+            # Update with final card
+            self.card_container.content = final_card
+            self.page.update()
+            print("Final card updated")
             
             print("Decision card created and added to container")
             self.page.update()
