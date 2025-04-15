@@ -197,13 +197,7 @@ def main(page: ft.Page):
                 resource_config["initial"] = new_value
                 print(f"Updated {resource_id}: {current_value} → {new_value}")
         
-        # Show feedback
-        content_area.content = ft.Text(
-            value=f"You chose: {choice.get('text', direction)}",
-            size=20,
-            color="blue"
-        )
-        page.update()
+        # This feedback now happens in the continue button section below
         
         # Find next decision
         next_decision = None
@@ -213,12 +207,26 @@ def main(page: ft.Page):
                     next_decision = decisions[d]
                     break
         
-        # Show next decision after delay
+        # Show next decision with a continue button
         if next_decision:
-            def show_next():
-                show_decision(next_decision, current_resources)
+            # Show a "continue" button instead of using page.after
+            continue_button = ft.ElevatedButton(
+                text="Continue →",
+                on_click=lambda _: show_decision(next_decision, current_resources),
+                bgcolor="blue",
+                color="white"
+            )
             
-            page.after(1000, show_next)
+            content_area.content = ft.Column([
+                ft.Text(
+                    value=f"You chose: {choice.get('text', direction)}",
+                    size=20,
+                    color="blue"
+                ),
+                ft.Container(height=20),  # Spacer
+                continue_button
+            ])
+            page.update()
     
     # Start with game selection
     show_game_selection()
