@@ -6,7 +6,7 @@ from swipe_fate.ui.decision_card import create_decision_card
 from swipe_fate.ui.resource_display import create_resource_display
 
 class UIManager:
-    def __init__(self, page: ft.Page, game_state: GameState) -> None:
+    def __init__(self, page: ft.Page, game_state: GameState, card_container: ft.Container = None) -> None:
         self.page = page
         self.game_state = game_state
         
@@ -16,7 +16,7 @@ class UIManager:
         self.decisions: List[Dict[str, Any]] = []
         
         # UI components
-        self.card_container = ft.Container(padding=20, alignment="center")
+        self.card_container = card_container or ft.Container(padding=20, alignment="center")
         self.resource_container = ft.Container()
         self.game_over_dialog: Optional[ft.AlertDialog] = None
         

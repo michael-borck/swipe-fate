@@ -11,7 +11,12 @@ class CoreEngine:
     def __init__(self, page: ft.Page) -> None:
         self.page = page
         self.game_state = GameState()
-        self.ui_manager = UIManager(self.page, self.game_state)
+        
+        # Create card container first
+        self.card_container = ft.Container(padding=20, alignment="center")
+        
+        # Initialize UI manager with our card container
+        self.ui_manager = UIManager(self.page, self.game_state, self.card_container)
         self.event_manager = EventManager()
         self.config_data: Dict[str, Any] = {}
         self.setup()
