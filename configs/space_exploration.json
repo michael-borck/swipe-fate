@@ -41,6 +41,8 @@
     {
       "id": "start",
       "text": "Your ship detects an uncharted asteroid field ahead. How do you proceed?",
+      "image": "assets/cards/asteroid_field.jpg",
+      "image_url": "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=600",
       "left": {
         "text": "Navigate through carefully (slower but safer)",
         "effects": {
@@ -80,6 +82,8 @@
     {
       "id": "alien_artifact",
       "text": "You've discovered an alien artifact! It seems to be still active.",
+      "image": "assets/cards/alien_artifact.jpg",
+      "image_url": "https://images.unsplash.com/photo-1581822261290-991b38693d1b?q=80&w=600",
       "left": {
         "text": "Bring it aboard for study",
         "effects": {
@@ -236,7 +240,45 @@
     "default": {
       "background_color": "#0a1128",
       "text_color": "#cad2c5",
-      "accent_color": "#7b2cbf"
+      "accent_color": "#7b2cbf",
+      "background_image": "assets/backgrounds/space.jpg",
+      "background_image_url": "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?q=80&w=1200",
+      "card_back_image": "assets/cards/space_card_back.png",
+      "card_back_image_url": "https://images.unsplash.com/photo-1454789548928-9efd52dc4031?q=80&w=600"
+    }
+  },
+  "assets": {
+    "icons": {
+      "fuel": {
+        "path": "assets/icons/fuel.png",
+        "url": "https://img.icons8.com/fluency/48/rocket-fuel.png"
+      },
+      "oxygen": {
+        "path": "assets/icons/oxygen.png",
+        "url": "https://img.icons8.com/fluency/48/gas-mask.png"
+      },
+      "crew_morale": {
+        "path": "assets/icons/morale.png",
+        "url": "https://img.icons8.com/fluency/48/happy.png"
+      },
+      "ship_integrity": {
+        "path": "assets/icons/integrity.png",
+        "url": "https://img.icons8.com/fluency/48/maintenance.png"
+      },
+      "scientific_data": {
+        "path": "assets/icons/data.png",
+        "url": "https://img.icons8.com/fluency/48/database.png"
+      }
+    },
+    "sounds": {
+      "swipe": {
+        "path": "assets/sounds/swipe.mp3",
+        "url": "https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3"
+      },
+      "alert": {
+        "path": "assets/sounds/alert.mp3",
+        "url": "https://assets.mixkit.co/sfx/preview/mixkit-classic-alarm-995.mp3"
+      }
     }
   }
 }

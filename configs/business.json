@@ -41,6 +41,8 @@
     {
       "id": "start",
       "text": "You're starting your tech company. What's your first focus?",
+      "image": "assets/cards/startup.jpg",
+      "image_url": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?q=80&w=600",
       "left": {
         "text": "Product quality (build something amazing)",
         "effects": {
@@ -85,6 +87,8 @@
     {
       "id": "investment",
       "text": "A venture capital firm is interested in your startup. What's your approach?",
+      "image": "assets/cards/venture_capital.jpg",
+      "image_url": "https://images.unsplash.com/photo-1579532536935-619928decd08?q=80&w=600",
       "left": {
         "text": "Accept large investment for aggressive growth",
         "effects": {
@@ -278,7 +282,45 @@
     "default": {
       "background_color": "#ffffff",
       "text_color": "#333333",
-      "accent_color": "#4a86e8"
+      "accent_color": "#4a86e8",
+      "background_image": "assets/backgrounds/business.jpg",
+      "background_image_url": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200",
+      "card_back_image": "assets/cards/business_card_back.png",
+      "card_back_image_url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600"
+    }
+  },
+  "assets": {
+    "icons": {
+      "money": {
+        "path": "assets/icons/money.png",
+        "url": "https://img.icons8.com/fluency/48/money-bag.png"
+      },
+      "reputation": {
+        "path": "assets/icons/reputation.png",
+        "url": "https://img.icons8.com/fluency/48/thumb-up.png"
+      },
+      "staff": {
+        "path": "assets/icons/staff.png",
+        "url": "https://img.icons8.com/fluency/48/conference-call.png"
+      },
+      "product_quality": {
+        "path": "assets/icons/quality.png",
+        "url": "https://img.icons8.com/fluency/48/certificate.png"
+      },
+      "user_base": {
+        "path": "assets/icons/users.png",
+        "url": "https://img.icons8.com/fluency/48/group.png"
+      }
+    },
+    "sounds": {
+      "swipe": {
+        "path": "assets/sounds/swipe.mp3",
+        "url": "https://assets.mixkit.co/sfx/preview/mixkit-fast-small-sweep-transition-166.mp3"
+      },
+      "success": {
+        "path": "assets/sounds/success.mp3",
+        "url": "https://assets.mixkit.co/sfx/preview/mixkit-coin-win-notification-1992.mp3"
+      }
     }
   }
 }

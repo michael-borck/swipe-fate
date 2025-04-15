@@ -33,6 +33,7 @@ A complete game configuration file includes these main sections:
       "id": "decision1",
       "text": "Decision description text",
       "image": "optional/path/to/image.png",
+      "image_url": "https://example.com/images/decision1.jpg",
       "left": {
         "text": "Left option text",
         "effects": {
@@ -87,8 +88,80 @@ A complete game configuration file includes these main sections:
     "default": {
       "background_color": "#f5f5f5",
       "text_color": "#333333",
-      "accent_color": "#4a86e8"
+      "accent_color": "#4a86e8",
+      "background_image": "assets/backgrounds/default.jpg",
+      "background_image_url": "https://example.com/backgrounds/default.jpg",
+      "card_back_image": "assets/cards/card_back.png",
+      "card_back_image_url": "https://example.com/cards/card_back.png"
     }
+  },
+  "assets": {
+    "icons": {
+      "money": {
+        "path": "assets/icons/money.png",
+        "url": "https://example.com/icons/money.png"
+      },
+      "reputation": {
+        "path": "assets/icons/reputation.png",
+        "url": "https://example.com/icons/reputation.png"
+      }
+    },
+    "sounds": {
+      "swipe": {
+        "path": "assets/sounds/swipe.mp3",
+        "url": "https://example.com/sounds/swipe.mp3"
+      },
+      "success": {
+        "path": "assets/sounds/success.mp3",
+        "url": "https://example.com/sounds/success.mp3"
+      }
+    }
+  }
+}
+```
+
+## Asset Handling
+
+The game supports both local assets and remote URLs to accommodate different platforms:
+
+### Local vs Remote Assets
+
+- **Local Assets**: Use relative paths from the game directory (`assets/images/card1.png`)
+- **Remote Assets**: Use full URLs (`https://example.com/images/card1.png`)
+
+The game will try to load local assets first, then fall back to URLs when:
+- Running on platforms without local file access (web browser)
+- The local file isn't found
+
+### Asset Types
+
+```json
+"assets": {
+  "icons": {
+    "resource_name": {
+      "path": "local/path/to/icon.png",
+      "url": "https://example.com/icon.png"
+    }
+  },
+  "sounds": {
+    "effect_name": {
+      "path": "local/path/to/sound.mp3",
+      "url": "https://example.com/sound.mp3"
+    }
+  }
+}
+```
+
+### Theme Assets
+
+Themes can include background images and other visual elements:
+
+```json
+"themes": {
+  "default": {
+    "background_color": "#f5f5f5",
+    "background_image": "assets/backgrounds/default.jpg",
+    "background_image_url": "https://example.com/backgrounds/default.jpg"
   }
 }
 ```
@@ -157,7 +230,8 @@ Decisions are the core gameplay element:
 Each decision needs:
 - `id`: Unique identifier
 - `text`: Description of the decision scenario
-- `image`: Optional path to an image
+- `image`: Optional path to a local image file
+- `image_url`: Optional URL to an online image (used on platforms where local files aren't accessible)
 - `left` and `right` options, each containing:
   - `text`: Description of the choice
   - `effects`: How resources change when selected
