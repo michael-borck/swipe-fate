@@ -45,11 +45,8 @@ class CoreEngine:
             text="Business Simulator",
             icon="business",
             on_click=lambda e: self.load_configuration("configs/business.json"),
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: "white"},
-                bgcolor={ft.MaterialState.DEFAULT: "#4a86e8"},
-                padding=20,
-            ),
+            color="white",
+            bgcolor="#4a86e8",
             width=300,
         )
         
@@ -57,11 +54,8 @@ class CoreEngine:
             text="Space Explorer",
             icon="rocket_launch",
             on_click=lambda e: self.load_configuration("configs/space_exploration.json"),
-            style=ft.ButtonStyle(
-                color={ft.MaterialState.DEFAULT: "white"},
-                bgcolor={ft.MaterialState.DEFAULT: "#7b2cbf"},
-                padding=20,
-            ),
+            color="white",
+            bgcolor="#7b2cbf",
             width=300,
         )
         
