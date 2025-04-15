@@ -37,6 +37,24 @@ class CoreEngine:
         # Try a different approach - add buttons directly to the page
         print("Showing game selection options...")
         
+        # Reset the page to make sure it's clean
+        self.page.controls.clear()
+        
+        # Add a debug text to the top
+        debug_header = ft.AppBar(
+            title=ft.Text("SwipeFate - Debug Mode"),
+            bgcolor="#ff6700",
+            color="white"
+        )
+        
+        debug_text = ft.Text("Game selection screen should appear below", size=20, color="red")
+        
+        self.page.add(debug_header)
+        self.page.add(debug_text)
+        self.page.update()
+        
+        print("Debug header added to page")
+        
         # Clear existing content
         self.card_container.content = None
         
@@ -72,9 +90,31 @@ class CoreEngine:
         horizontal_alignment="center",
         spacing=10)
         
-        # Add to card container
-        self.card_container.content = selection_ui
+        # Add directly to page instead of card container
+        selection_container = ft.Container(
+            content=selection_ui,
+            padding=20,
+            margin=20,
+            bgcolor="#f0f0f0",
+            border_radius=10,
+            border=ft.border.all(2, "#4a86e8"),
+        )
+        
+        self.page.add(selection_container)
+        print("Added selection UI to page")
+        
+        # Add button to verify page is working
+        self.page.add(
+            ft.ElevatedButton(
+                text="CLICK ME - TEST BUTTON",
+                color="white",
+                bgcolor="red",
+                on_click=lambda _: print("Test button clicked!")
+            )
+        )
+        
         self.page.update()
+        print("Page updated - UI should be visible now")
         
     def load_configuration(self, config_path: str) -> None:
         """Load a game configuration file"""
