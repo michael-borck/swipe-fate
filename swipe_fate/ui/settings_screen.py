@@ -63,9 +63,11 @@ class SettingsScreen:
             width=form_width,
             options=[
                 ft.dropdown.Option("none", "None"),
-                ft.dropdown.Option("grayscale", "Grayscale"),
+                ft.dropdown.Option("pixelate", "Pixelate"),
                 ft.dropdown.Option("cartoon", "Cartoon"),
-                ft.dropdown.Option("oil_painting", "Oil Painting"),
+                ft.dropdown.Option("posterize", "Posterize"),
+                ft.dropdown.Option("blur", "Blur"),
+                ft.dropdown.Option("grayscale", "Grayscale"),
             ],
             value=self.settings.get("filter", "none"),
         )

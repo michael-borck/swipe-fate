@@ -13,10 +13,9 @@ class ImageProcessor:
         self.filters: Dict[str, Callable[[Image.Image, Any], Image.Image]] = {
             "grayscale": self._apply_grayscale,
             "cartoon": self._apply_cartoon,
-            "oil_painting": self._apply_oil_painting,
-            "sepia": self._apply_sepia,
+            "posterize": self._apply_posterize,
             "blur": self._apply_blur,
-            "sharpen": self._apply_sharpen,
+            "pixelate": self._apply_pixelate,
         }
 
         # Create a cache directory
@@ -78,41 +77,42 @@ class ImageProcessor:
         return ImageOps.grayscale(img)
 
     def _apply_cartoon(self, img: Image.Image) -> Image.Image:
-        """Apply a cartoon-like effect to an image"""
-        # Edge detection and enhancement
-        edges = img.filter(ImageFilter.FIND_EDGES)
+        """Apply a cartoon-like effect using edge detection and color quantization"""
+        # Convert to RGB mode if not already
+        img_rgb = img.convert("RGB")
+        
+        # Edge detection for outlines
+        edges = img_rgb.filter(ImageFilter.FIND_EDGES)
         edges = ImageEnhance.Contrast(edges).enhance(2.0)
-
-        # Color simplification
-        color = img.filter(ImageFilter.SMOOTH_MORE)
-        color = ImageEnhance.Color(color).enhance(1.5)
-
-        # Combine edges and colors
-        result = Image.blend(color, edges, 0.3)
+        
+        # Simplify colors (quantize to fewer colors)
+        quantized = img_rgb.quantize(colors=32).convert("RGB")
+        
+        # Combine edges with the quantized image
+        result = Image.blend(quantized, edges, 0.3)
         return result
-
-    def _apply_oil_painting(self, img: Image.Image) -> Image.Image:
-        """Apply an oil painting effect to an image"""
-        # Smooth and then enhance edges
-        result = img.filter(ImageFilter.SMOOTH_MORE)
-        result = result.filter(ImageFilter.EDGE_ENHANCE)
-        result = ImageEnhance.Contrast(result).enhance(1.2)
-        return result
-
-    def _apply_sepia(self, img: Image.Image) -> Image.Image:
-        """Apply a sepia tone to an image"""
-        # First convert to grayscale
-        gray = ImageOps.grayscale(img)
-
-        # Apply sepia tone
-        sepia = Image.new("RGB", gray.size, (255, 240, 192))
-        return Image.blend(gray.convert("RGB"), sepia, 0.5)
+        
+    def _apply_posterize(self, img: Image.Image) -> Image.Image:
+        """Apply posterize effect (reduced color palette)"""
+        # Convert to RGB mode if not already
+        img_rgb = img.convert("RGB")
+        
+        # Posterize to reduce number of bits per channel (2 bits = 4 values per channel)
+        return ImageOps.posterize(img_rgb, 2)
+        
+    def _apply_pixelate(self, img: Image.Image) -> Image.Image:
+        """Apply pixelation effect"""
+        # Determine pixelation factor based on image size
+        width, height = img.size
+        factor = max(1, min(width, height) // 50)  # Dynamic pixelation based on image size
+        
+        # Downsample and then upsample without interpolation
+        small = img.resize(
+            (width // factor, height // factor), 
+            Image.NEAREST
+        )
+        return small.resize(img.size, Image.NEAREST)
 
     def _apply_blur(self, img: Image.Image) -> Image.Image:
         """Apply a blur effect to an image"""
         return img.filter(ImageFilter.GaussianBlur(radius=2))
-
-    def _apply_sharpen(self, img: Image.Image) -> Image.Image:
-        """Sharpen an image"""
-        enhancer = ImageEnhance.Sharpness(img)
-        return enhancer.enhance(2.0)

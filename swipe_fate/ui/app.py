@@ -36,6 +36,7 @@ class SwipeFateApp:
         self.current_screen: Optional[Any] = None
         self.loading: ft.ProgressRing
         self.is_mobile: bool = False
+        self.current_filter: Optional[str] = None
 
         # Configure the page
         self._configure_page()
@@ -93,6 +94,10 @@ class SwipeFateApp:
             self.game_state = GameState.new_game(config)
             if self.game_state:  # Extra safety check
                 self.game_logic = GameLogic(self.game_state, config)
+                
+                # Set current filter from game state if it exists
+                if hasattr(self.game_state, 'active_filter') and self.game_state.active_filter:
+                    self.current_filter = self.game_state.active_filter
 
             # Preload assets in background
             await self._preload_assets()
@@ -115,12 +120,18 @@ class SwipeFateApp:
         if not self.game_state:
             return
 
-        # Preload card back
-        await self.asset_manager.get_image(str(self.game_state.theme.card_back))
+        # Preload card back with current filter if any
+        await self.asset_manager.get_image(
+            str(self.game_state.theme.card_back),
+            filter_type=self.current_filter
+        )
 
-        # Preload resource icons
+        # Preload resource icons with current filter if any
         for icon_path in self.game_state.theme.resource_icons.values():
-            await self.asset_manager.get_image(str(icon_path))
+            await self.asset_manager.get_image(
+                str(icon_path),
+                filter_type=self.current_filter
+            )
 
     async def navigate_to(self, screen_name: str, **kwargs: Any) -> None:
         """Navigate to a specific screen"""
@@ -245,8 +256,23 @@ class SwipeFateApp:
                 # Apply filter changes if needed
                 filter_type = settings.get("filter")
                 if filter_type and filter_type != "none":
-                    # Update assets with the new filter
-                    pass
+                    # Store the selected filter in both app and game state
+                    self.current_filter = filter_type
+                    self.game_state.active_filter = filter_type
+                    
+                    self.page.snack_bar = ft.SnackBar(
+                        content=ft.Text(f"Applying {filter_type} filter..."),
+                        action="OK"
+                    )
+                    self.page.snack_bar.open = True
+                    self.page.update()
+                    
+                    # Trigger asset reload with filter
+                    await self._preload_assets()
+                else:
+                    # Reset filter if none selected
+                    self.current_filter = None
+                    self.game_state.active_filter = None
                     
             # Return to title screen
             self.page.run_async(self.navigate_to("title"))
@@ -268,7 +294,7 @@ class SwipeFateApp:
             return {
                 "player_name": "Player", 
                 "difficulty": "standard", 
-                "filter": "none",
+                "filter": self.current_filter or "none",
                 "theme": "kingdom"
             }
 
@@ -283,7 +309,7 @@ class SwipeFateApp:
         return {
             "player_name": self.game_state.player_name,
             "difficulty": self.game_state.difficulty,
-            "filter": "none",  # Currently active filter
+            "filter": self.current_filter or "none",
             "theme": current_theme
         }
 

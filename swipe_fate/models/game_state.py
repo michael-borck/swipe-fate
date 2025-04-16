@@ -26,6 +26,7 @@ class GameState:
         # Player settings
         self.difficulty = difficulty
         self.player_name = player_name
+        self.active_filter = None  # Current visual filter
 
         # Additional state fields
         self.game_over = False
@@ -64,6 +65,7 @@ class GameState:
             "seen_cards": list(self.seen_cards),
             "difficulty": self.difficulty,
             "player_name": self.player_name,
+            "active_filter": self.active_filter,
             "game_over": self.game_over,
             "end_message": self.end_message,
         }
@@ -99,5 +101,6 @@ class GameState:
         game_state.seen_cards = set(save_data["seen_cards"])
         game_state.game_over = save_data["game_over"]
         game_state.end_message = save_data["end_message"]
+        game_state.active_filter = save_data.get("active_filter", None)
 
         return game_state

@@ -96,34 +96,36 @@ class AssetManager:
 
         Args:
             img_path: Path to the image file
-            filter_type: Type of filter to apply
+            filter_type: Type of filter to apply (pixelate, cartoon, posterize, blur, grayscale)
 
         Returns:
             Path: Path to the filtered image
         """
-        img = Image.open(img_path)
-
-        if filter_type == "grayscale":
-            filtered = ImageOps.grayscale(img)
-        elif filter_type == "cartoon":
-            # Simple cartoon effect
-            filtered = img.filter(ImageFilter.CONTOUR)
-            filtered = filtered.filter(ImageFilter.SMOOTH)
-        elif filter_type == "oil_painting":
-            # Simple oil painting effect
-            filtered = img.filter(ImageFilter.SMOOTH_MORE)
-            filtered = filtered.filter(ImageFilter.EDGE_ENHANCE)
-        else:
-            # No recognized filter, return original
-            return img_path
-
-        # Save the filtered image
+        # Get image processor from app
+        from swipe_fate.services.image_processor import ImageProcessor
+        processor = ImageProcessor()
+        
+        # Create output directory
         output_dir = Path.home() / ".swipe_fate" / "filtered"
         output_dir.mkdir(parents=True, exist_ok=True)
-
         output_path = output_dir / f"{img_path.stem}_{filter_type}{img_path.suffix}"
-        filtered.save(output_path)
-        return output_path
+        
+        # Check if filtered image already exists
+        if output_path.exists():
+            return output_path
+            
+        # Process the image using ImageProcessor
+        try:
+            # Use the image processor service
+            processed_path = processor.process_image(
+                str(img_path),
+                filter_name=filter_type
+            )
+            return Path(processed_path)
+        except Exception as e:
+            print(f"Error applying filter {filter_type} to {img_path}: {e}")
+            # Return original if filtering fails
+            return img_path
 
     def _get_default_asset_for_type(self, path: str) -> str:
         """
