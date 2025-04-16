@@ -34,6 +34,10 @@
 - 📝 Add save/load functionality
 - 📝 Create more game configurations and cards
 - 📝 Add additional themes (Science, Space, Fantasy)
+- 📝 Standardize asset naming conventions across themes (descriptive names)
+- 📝 Implement filter stacking for greater visual customization
+- 📝 Add backstory/lore to game configurations
+- 📝 Create a "Fate Multiverse" system to link different game themes narratively
 - 📝 Implement animated card transitions
 - 📝 Add sound effects
 - 📝 Package for distribution (PyPI)

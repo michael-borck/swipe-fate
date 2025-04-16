@@ -89,6 +89,10 @@
 - 📝 Sound effects and audio
 - 📝 Additional themes (Fantasy, Politics)
 - 📝 Tutorial mode
+- 📝 Standardize asset naming to descriptive format
+- 📝 Filter stacking system for combined visual effects
+- 📝 Backstory and lore display for each theme
+- 📝 "Fate Multiverse" narrative linking between games
 
 ### Distribution
 - 📝 Package for PyPI
@@ -104,9 +108,12 @@
 
 ## Next Steps
 1. Create high-quality pixel art assets for the Business theme
-2. Begin designing Science theme assets and cards
-3. Improve test coverage for ConfigLoader and AssetManager (currently ~70%)
-4. Enhance error handling when switching themes/filters
-5. Add more game content (cards, scenarios) for each theme
-6. Complete documentation with screenshots
-7. Set up CI/CD pipeline
+2. Standardize asset naming conventions across all themes
+3. Implement save/load functionality for game progress
+4. Begin designing Science theme assets and cards
+5. Add backstory/lore fields to configuration model
+6. Improve test coverage for ConfigLoader and AssetManager (currently ~70%)
+7. Enhance error handling when switching themes/filters
+8. Add more game content (cards, scenarios) for each theme
+9. Complete documentation with screenshots
+10. Set up CI/CD pipeline
