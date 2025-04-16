@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swipe-fate"
+version = "0.1.0"
+description = "A data-driven card-based decision game inspired by Reigns"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Michael" }
+]
+dependencies = [
+    "flet>=0.27.0",
+    "pillow>=9.0.0",
+    "pydantic>=2.0.0",
+    "aiohttp>=3.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.18.0",
+    "pytest-mock>=3.10.0",
+    "mypy>=1.0.0",
+    "ruff>=0.0.230",
+    "mkdocs>=1.3.0",
+    "mkdocs-material>=8.2.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.scripts]
+swipe-fate = "swipe_fate.__main__:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[[tool.mypy.overrides]]
+module = "flet.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"

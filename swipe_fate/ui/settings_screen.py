@@ -1,51 +1,62 @@
 # ui/settings_screen.py
+from typing import Any, Callable, Dict, Optional
+
 import flet as ft
-from typing import Callable, Dict, Any
 
 
-class SettingsScreen(ft.UserControl):
+# Note: For Flet 0.27.x compatibility
+# We're using a standard class instead of UserControl which is only in newer Flet versions
+class SettingsScreen:
     def __init__(
         self,
         on_save: Callable[[Dict[str, Any]], None],
-        on_cancel: Callable,
-        settings: Dict[str, Any]
+        on_cancel: Callable[[], Any],
+        settings: Dict[str, Any],
     ):
-        super().__init__()
         self.on_save = on_save
         self.on_cancel = on_cancel
         self.settings = settings
-        
+        self.page: Optional[ft.Page] = None
+
         # Settings form controls
-        self.player_name_field = None
-        self.difficulty_dropdown = None
-        self.filter_dropdown = None
-    
-    def build(self):
+        self.player_name_field: Optional[ft.TextField] = None
+        self.difficulty_dropdown: Optional[ft.Dropdown] = None
+        self.filter_dropdown: Optional[ft.Dropdown] = None
+
+    def build(self) -> ft.Container:
         # Responsive design adjustments
-        is_mobile = self.page.width < 600 if self.page and self.page.width else True
+        page_width = 800  # Default width
+        if self.page and hasattr(self.page, 'width') and self.page.width is not None:
+            page_width = self.page.width
+            
+        is_mobile = page_width < 600
         padding_value = 20 if is_mobile else 40
         title_size = 24 if is_mobile else 32
-        form_width = self.page.width * 0.9 if is_mobile else 500
         
+        # Set form width based on page width
+        form_width: float = 500
+        if is_mobile:
+            form_width = page_width * 0.9
+
         # Create form fields
         self.player_name_field = ft.TextField(
             label="Player Name",
             value=self.settings.get("player_name", "Player"),
             width=form_width,
-            autofocus=True
+            autofocus=True,
         )
-        
+
         self.difficulty_dropdown = ft.Dropdown(
             label="Difficulty",
             width=form_width,
             options=[
                 ft.dropdown.Option("easy", "Easy"),
                 ft.dropdown.Option("standard", "Standard"),
-                ft.dropdown.Option("hard", "Hard")
+                ft.dropdown.Option("hard", "Hard"),
             ],
-            value=self.settings.get("difficulty", "standard")
+            value=self.settings.get("difficulty", "standard"),
         )
-        
+
         self.filter_dropdown = ft.Dropdown(
             label="Visual Filter",
             width=form_width,
@@ -53,32 +64,26 @@ class SettingsScreen(ft.UserControl):
                 ft.dropdown.Option("none", "None"),
                 ft.dropdown.Option("grayscale", "Grayscale"),
                 ft.dropdown.Option("cartoon", "Cartoon"),
-                ft.dropdown.Option("oil_painting", "Oil Painting")
+                ft.dropdown.Option("oil_painting", "Oil Painting"),
             ],
-            value=self.settings.get("filter", "none")
+            value=self.settings.get("filter", "none"),
         )
-        
+
         # Create buttons
-        save_button = ft.ElevatedButton(
-            "Save",
-            icon=ft.icons.SAVE,
-            on_click=self._handle_save
-        )
-        
+        save_button = ft.ElevatedButton("Save", icon=ft.icons.SAVE, on_click=self._handle_save)
+
         cancel_button = ft.OutlinedButton(
-            "Cancel",
-            icon=ft.icons.CANCEL,
-            on_click=lambda _: self.on_cancel()
+            "Cancel", icon=ft.icons.CANCEL, on_click=lambda _: self.on_cancel()
         )
-        
+
         # Create layout
         title = ft.Text(
             "Settings",
             size=title_size,
             weight=ft.FontWeight.BOLD,
-            text_align=ft.TextAlign.CENTER
+            text_align=ft.TextAlign.CENTER,
         )
-        
+
         content = ft.Column(
             controls=[
                 title,
@@ -89,37 +94,41 @@ class SettingsScreen(ft.UserControl):
                 ft.Container(height=10),  # Spacing
                 self.filter_dropdown,
                 ft.Container(height=20),  # Spacing
-                ft.Row(
-                    [cancel_button, save_button],
-                    alignment=ft.MainAxisAlignment.END
-                )
+                ft.Row([cancel_button, save_button], alignment=ft.MainAxisAlignment.END),
             ],
             alignment=ft.MainAxisAlignment.START,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
-        
+
         # Main container
         return ft.Container(
             content=content,
             alignment=ft.alignment.center,
             padding=padding_value,
-            expand=True
+            expand=True,
         )
-    
-    def _handle_save(self, e):
+
+    def _handle_save(self, e: ft.ControlEvent) -> None:
         """Handle saving the settings"""
         # Validate player name
-        if not self.player_name_field.value or len(self.player_name_field.value.strip()) == 0:
-            self.player_name_field.error_text = "Please enter a player name"
-            self.player_name_field.update()
+        if (not self.player_name_field or 
+            not self.player_name_field.value or 
+            len(self.player_name_field.value.strip()) == 0):
+            if self.player_name_field:
+                self.player_name_field.error_text = "Please enter a player name"
+                self.player_name_field.update()
             return
-        
+
+        # Ensure all required fields are available
+        if not self.difficulty_dropdown or not self.filter_dropdown:
+            return
+            
         # Collect settings
         updated_settings = {
             "player_name": self.player_name_field.value.strip(),
             "difficulty": self.difficulty_dropdown.value,
-            "filter": self.filter_dropdown.value
+            "filter": self.filter_dropdown.value,
         }
-        
+
         # Call save handler
         self.on_save(updated_settings)

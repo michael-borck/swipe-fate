@@ -1,6 +1,7 @@
-# models/game_state.py
-from typing import Dict, Set, Optional
-from reigns_game.models.config import Card, GameSettings, Theme
+from typing import Dict, Set
+
+from swipe_fate.models.config import Card, GameSettings, Theme
+
 
 class GameState:
     def __init__(
@@ -10,39 +11,40 @@ class GameState:
         settings: GameSettings,
         theme: Theme,
         difficulty: str = "standard",
-        player_name: str = "Player"
+        player_name: str = "Player",
     ):
         # Core game state
         self.resources = resources
         self.current_card = current_card
         self.settings = settings
         self.theme = theme
-        
+
         # Game progress tracking
         self.turn_count = 0
         self.seen_cards: Set[str] = set()
-        
+
         # Player settings
         self.difficulty = difficulty
         self.player_name = player_name
-        
+
         # Additional state fields
         self.game_over = False
         self.end_message = ""
-        
+
     @classmethod
     def new_game(cls, config, player_name: str = "Player", difficulty: str = "standard"):
         """Create a new game state from configuration"""
         # Initialize resources based on config
         resources = {
-            resource_id: value 
+            resource_id: value
             for resource_id, value in config.game_settings.initial_resources.items()
         }
-        
+
         # Get first card (could be random or specific starting card)
         import random
+
         first_card = random.choice(config.cards)
-        
+
         # Create new game state
         return cls(
             resources=resources,
@@ -50,9 +52,9 @@ class GameState:
             settings=config.game_settings,
             theme=config.theme,
             difficulty=difficulty,
-            player_name=player_name
+            player_name=player_name,
         )
-        
+
     def save_game(self) -> dict:
         """Convert game state to a serializable dictionary for saving"""
         return {
@@ -63,9 +65,9 @@ class GameState:
             "difficulty": self.difficulty,
             "player_name": self.player_name,
             "game_over": self.game_over,
-            "end_message": self.end_message
+            "end_message": self.end_message,
         }
-    
+
     @classmethod
     def load_game(cls, save_data: dict, config):
         """Load game state from saved data and config"""
@@ -75,12 +77,13 @@ class GameState:
             if card.id == save_data["current_card_id"]:
                 current_card = card
                 break
-        
+
         if not current_card:
             # Fallback if card not found
             import random
+
             current_card = random.choice(config.cards)
-        
+
         # Create game state
         game_state = cls(
             resources=save_data["resources"],
@@ -88,13 +91,13 @@ class GameState:
             settings=config.game_settings,
             theme=config.theme,
             difficulty=save_data["difficulty"],
-            player_name=save_data["player_name"]
+            player_name=save_data["player_name"],
         )
-        
+
         # Restore additional state
         game_state.turn_count = save_data["turn_count"]
         game_state.seen_cards = set(save_data["seen_cards"])
         game_state.game_over = save_data["game_over"]
         game_state.end_message = save_data["end_message"]
-        
+
         return game_state
