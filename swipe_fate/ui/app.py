@@ -86,6 +86,9 @@ class SwipeFateApp:
         self.page.update()
 
         try:
+            # Store the config path for theme detection
+            self.config_path = config_path
+            
             config = await self.config_loader.load_config(config_path)
             self.game_state = GameState.new_game(config)
             if self.game_state:  # Extra safety check
@@ -199,27 +202,89 @@ class SwipeFateApp:
 
     def _handle_save_settings(self, settings: Dict[str, Any]) -> None:
         """Handle saving settings"""
-        if self.game_state:
-            self.game_state.player_name = settings.get("player_name", "Player")
-            self.game_state.difficulty = settings.get("difficulty", "standard")
-
-            # Apply theme/filter changes if needed
-            filter_type = settings.get("filter")
-            if filter_type and filter_type != "none":
-                # Update assets with the new filter
-                pass
-
-        self.page.run_async(self.navigate_to("title"))
+        # Get player name and difficulty
+        player_name = settings.get("player_name", "Player")
+        difficulty = settings.get("difficulty", "standard")
+        
+        # Check if theme changed
+        selected_theme = settings.get("theme", "kingdom")
+        theme_changed = False
+        
+        if hasattr(self, 'config_path') and self.config_path:
+            current_theme = "kingdom"
+            if "business" in self.config_path:
+                current_theme = "business"
+            elif "kingdom" in self.config_path:
+                current_theme = "kingdom"
+                
+            if current_theme != selected_theme:
+                theme_changed = True
+                
+        # Apply theme change if needed
+        if theme_changed or not self.game_state:
+            # Determine the new config path based on selected theme
+            config_dir = Path(__file__).parent.parent.parent / "swipe_fate" / "config"
+            new_config_path = str(config_dir / f"{selected_theme}_game.json")
+            
+            # Save the settings temporarily
+            self.page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Switching to {selected_theme.capitalize()} theme..."),
+                action="OK"
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            
+            # Schedule loading the new config
+            self.page.run_async(self._load_and_switch_theme(new_config_path, player_name, difficulty))
+        else:
+            # Just update existing game state
+            if self.game_state:
+                self.game_state.player_name = player_name
+                self.game_state.difficulty = difficulty
+                
+                # Apply filter changes if needed
+                filter_type = settings.get("filter")
+                if filter_type and filter_type != "none":
+                    # Update assets with the new filter
+                    pass
+                    
+            # Return to title screen
+            self.page.run_async(self.navigate_to("title"))
+            
+    async def _load_and_switch_theme(self, config_path: str, player_name: str, difficulty: str) -> None:
+        """Load a new configuration with the selected theme"""
+        success = await self.load_config(config_path)
+        if success and self.game_state:
+            # Update player settings
+            self.game_state.player_name = player_name
+            self.game_state.difficulty = difficulty
+        
+        # Navigate back to title screen
+        await self.navigate_to("title")
 
     def _get_current_settings(self) -> dict:
         """Get current settings for the settings screen"""
         if not self.game_state:
-            return {"player_name": "Player", "difficulty": "standard", "filter": "none"}
+            return {
+                "player_name": "Player", 
+                "difficulty": "standard", 
+                "filter": "none",
+                "theme": "kingdom"
+            }
+
+        # Determine current theme by checking the config path if available
+        current_theme = "kingdom"  # Default
+        if hasattr(self, 'config_path') and self.config_path:
+            if "business" in self.config_path:
+                current_theme = "business"
+            elif "kingdom" in self.config_path:
+                current_theme = "kingdom"
 
         return {
             "player_name": self.game_state.player_name,
             "difficulty": self.game_state.difficulty,
             "filter": "none",  # Currently active filter
+            "theme": current_theme
         }
 
     def build(self) -> ft.Container:

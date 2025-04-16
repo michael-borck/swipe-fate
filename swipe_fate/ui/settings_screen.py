@@ -22,6 +22,7 @@ class SettingsScreen:
         self.player_name_field: Optional[ft.TextField] = None
         self.difficulty_dropdown: Optional[ft.Dropdown] = None
         self.filter_dropdown: Optional[ft.Dropdown] = None
+        self.theme_dropdown: Optional[ft.Dropdown] = None
 
     def build(self) -> ft.Container:
         # Responsive design adjustments
@@ -68,6 +69,16 @@ class SettingsScreen:
             ],
             value=self.settings.get("filter", "none"),
         )
+        
+        self.theme_dropdown = ft.Dropdown(
+            label="Game Theme",
+            width=form_width,
+            options=[
+                ft.dropdown.Option("kingdom", "Kingdom"),
+                ft.dropdown.Option("business", "Corporate"),
+            ],
+            value=self.settings.get("theme", "kingdom"),
+        )
 
         # Create buttons
         save_button = ft.ElevatedButton("Save", icon=ft.icons.SAVE, on_click=self._handle_save)
@@ -91,6 +102,8 @@ class SettingsScreen:
                 self.player_name_field,
                 ft.Container(height=10),  # Spacing
                 self.difficulty_dropdown,
+                ft.Container(height=10),  # Spacing
+                self.theme_dropdown,
                 ft.Container(height=10),  # Spacing
                 self.filter_dropdown,
                 ft.Container(height=20),  # Spacing
@@ -120,7 +133,7 @@ class SettingsScreen:
             return
 
         # Ensure all required fields are available
-        if not self.difficulty_dropdown or not self.filter_dropdown:
+        if not self.difficulty_dropdown or not self.filter_dropdown or not self.theme_dropdown:
             return
             
         # Collect settings
@@ -128,6 +141,7 @@ class SettingsScreen:
             "player_name": self.player_name_field.value.strip(),
             "difficulty": self.difficulty_dropdown.value,
             "filter": self.filter_dropdown.value,
+            "theme": self.theme_dropdown.value,
         }
 
         # Call save handler

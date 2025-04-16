@@ -1,12 +1,12 @@
 {
   "game_info": {
-    "title": "Swipe Fate",
-    "description": "Make strategic decisions and manage resources to succeed",
+    "title": "Kingdom Fate",
+    "description": "Rule your medieval kingdom through the power of swiping",
     "version": "0.1.0",
     "author": "Swipe Fate Team"
   },
   "theme": {
-    "name": "Default Theme",
+    "name": "Kingdom Theme",
     "card_back": "assets/themes/kingdom/card_back.png",
     "background": null,
     "color_scheme": {
