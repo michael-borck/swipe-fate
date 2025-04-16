@@ -42,12 +42,19 @@ swipe-verse --mode tui
 swipe-verse --assets path/to/assets/folder
 
 # Run with a specific theme
-swipe-verse --theme business  # or kingdom, science, etc.
+swipe-verse --theme business  # or kingdom, tutorial, etc.
+
+# Start with the tutorial
+swipe-verse --theme tutorial
 ```
 
 ## Game Configuration
 
-The game is data-driven and can be customized by editing JSON configuration files. Multiple theme configurations are available in the `swipe_fate/config/` directory, including `kingdom_game.json` and `business_game.json`.
+The game is data-driven and can be customized by editing JSON configuration files. Multiple theme configurations are available in the `swipe_verse/config/` directory:
+
+- `kingdom_game.json` - Medieval kingdom management
+- `business_game.json` - Corporate leadership simulation
+- `tutorial_game.json` - Interactive guide to gameplay mechanics
 
 ### Example Configuration
 
@@ -139,7 +146,7 @@ pip install -e ".[dev]"
 ruff check .
 
 # Run type checking
-mypy swipe_fate
+mypy swipe_verse
 
 # Run tests
 pytest

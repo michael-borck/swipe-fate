@@ -1,0 +1,219 @@
+{
+  "game_info": {
+    "title": "Swipe Verse Tutorial",
+    "description": "Learn how to play Swipe Verse with this interactive tutorial",
+    "version": "0.1.0",
+    "author": "Swipe Verse Team"
+  },
+  "theme": {
+    "name": "Tutorial Theme",
+    "card_back": "assets/default/card_back.png",
+    "background": null,
+    "color_scheme": {
+      "primary": "#3D405B",
+      "secondary": "#F4F1DE",
+      "accent": "#E07A5F"
+    },
+    "resource_icons": {
+      "knowledge": "assets/default/resource_icons/resource1.png",
+      "energy": "assets/default/resource_icons/resource2.png",
+      "time": "assets/default/resource_icons/resource3.png",
+      "mood": "assets/default/resource_icons/resource4.png"
+    },
+    "filters": {
+      "default": "none",
+      "available": ["pixelate", "cartoon", "grayscale", "blur", "posterize"]
+    }
+  },
+  "game_settings": {
+    "initial_resources": {
+      "knowledge": 50,
+      "energy": 50,
+      "time": 50,
+      "mood": 50
+    },
+    "win_conditions": [
+      {"resource": "knowledge", "min": 5, "max": 95},
+      {"resource": "energy", "min": 5, "max": 95},
+      {"resource": "time", "min": 5, "max": 95},
+      {"resource": "mood", "min": 5, "max": 95}
+    ],
+    "difficulty_modifiers": {
+      "easy": 0.7,
+      "standard": 1.0,
+      "hard": 1.3
+    },
+    "turn_unit": "steps",
+    "stats": {
+      "progress_formula": "knowledge*0.3 + energy*0.2 + time*0.2 + mood*0.3"
+    }
+  },
+  "cards": [
+    {
+      "id": "tutorial_001",
+      "title": "Welcome to Swipe Verse",
+      "text": "This tutorial will guide you through the basics of playing Swipe Verse. Swipe left or right to make choices. Each choice affects your resources shown at the top of the screen.",
+      "image": "assets/default/card_fronts/card1.png",
+      "choices": {
+        "left": {
+          "text": "I'd like to learn more",
+          "effects": {
+            "knowledge": 10,
+            "energy": 0,
+            "time": -5,
+            "mood": 5
+          },
+          "next_card": "tutorial_002"
+        },
+        "right": {
+          "text": "Let's get started",
+          "effects": {
+            "knowledge": 5,
+            "energy": 5,
+            "time": -5,
+            "mood": 5
+          },
+          "next_card": "tutorial_002"
+        }
+      }
+    },
+    {
+      "id": "tutorial_002",
+      "title": "About Resources",
+      "text": "Resources are the core of gameplay. In this tutorial, you manage Knowledge, Energy, Time, and Mood. If any resource hits 0 or 100, the game ends! Keep them balanced.",
+      "image": "assets/default/card_fronts/card2.png",
+      "choices": {
+        "left": {
+          "text": "Tell me about themes",
+          "effects": {
+            "knowledge": 10,
+            "energy": -5,
+            "time": -5,
+            "mood": 0
+          },
+          "next_card": "tutorial_003"
+        },
+        "right": {
+          "text": "Tell me about filters",
+          "effects": {
+            "knowledge": 10,
+            "energy": -5,
+            "time": -5,
+            "mood": 0
+          },
+          "next_card": "tutorial_004"
+        }
+      }
+    },
+    {
+      "id": "tutorial_003",
+      "title": "Game Themes",
+      "text": "Swipe Verse features multiple themes that completely change the experience. Try Kingdom for medieval ruling or Business for corporate climbing. Each theme has unique cards and resources.",
+      "image": "assets/default/card_fronts/card3.png",
+      "choices": {
+        "left": {
+          "text": "Tell me about filters now",
+          "effects": {
+            "knowledge": 10,
+            "energy": -5,
+            "time": -5,
+            "mood": 0
+          },
+          "next_card": "tutorial_004"
+        },
+        "right": {
+          "text": "Continue to gameplay tips",
+          "effects": {
+            "knowledge": 5,
+            "energy": 0,
+            "time": -5,
+            "mood": 5
+          },
+          "next_card": "tutorial_005"
+        }
+      }
+    },
+    {
+      "id": "tutorial_004",
+      "title": "Visual Filters",
+      "text": "You can apply visual filters to change the look of the game. Try Pixelate for a retro feel, Grayscale for classic noir, or Cartoon for a stylized appearance. Change filters in Settings.",
+      "image": "assets/default/card_fronts/card4.png",
+      "choices": {
+        "left": {
+          "text": "Tell me about themes",
+          "effects": {
+            "knowledge": 10,
+            "energy": -5,
+            "time": -5,
+            "mood": 0
+          },
+          "next_card": "tutorial_003"
+        },
+        "right": {
+          "text": "Continue to gameplay tips",
+          "effects": {
+            "knowledge": 5,
+            "energy": 0,
+            "time": -5,
+            "mood": 5
+          },
+          "next_card": "tutorial_005"
+        }
+      }
+    },
+    {
+      "id": "tutorial_005",
+      "title": "Gameplay Strategy",
+      "text": "Success requires balance. Pay attention to how each decision affects multiple resources at once. Sometimes the best choice is the one that causes the least harm to your critical resources.",
+      "image": "assets/default/card_fronts/card1.png",
+      "choices": {
+        "left": {
+          "text": "I understand",
+          "effects": {
+            "knowledge": 15,
+            "energy": 0,
+            "time": -5,
+            "mood": 0
+          },
+          "next_card": "tutorial_006"
+        },
+        "right": {
+          "text": "Got it, let's continue",
+          "effects": {
+            "knowledge": 15,
+            "energy": 0,
+            "time": -5,
+            "mood": 0
+          },
+          "next_card": "tutorial_006"
+        }
+      }
+    },
+    {
+      "id": "tutorial_006",
+      "title": "Final Tips",
+      "text": "Try different themes, experiment with choices, and have fun! Remember that each theme tells a different story, with unique challenges and resource management strategies.",
+      "image": "assets/default/card_fronts/card2.png",
+      "choices": {
+        "left": {
+          "text": "Start with Kingdom theme",
+          "effects": {
+            "knowledge": 10,
+            "energy": 10,
+            "time": -5,
+            "mood": 10
+          }
+        },
+        "right": {
+          "text": "Start with Business theme",
+          "effects": {
+            "knowledge": 10,
+            "energy": 10,
+            "time": -5,
+            "mood": 10
+          }
+        }
+      }
+    }
+  ]
+}
