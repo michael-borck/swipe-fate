@@ -1,7 +1,7 @@
 import pytest
 import flet as ft
 
-from swipe_fate.ui.settings_screen import SettingsScreen
+from swipe_verse.ui.settings_screen import SettingsScreen
 
 
 # Mock flet classes and functions

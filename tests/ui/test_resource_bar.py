@@ -72,7 +72,7 @@ def resource_bar(mock_flet, sample_resources, sample_icons, mocker):
             setattr(fake_ft, attr_name, getattr(mock_flet, attr_name))
     
     # Now import ResourceBar using the patched module
-    from swipe_fate.ui.components.resource_bar import ResourceBar
+    from swipe_verse.ui.components.resource_bar import ResourceBar
     
     # Create and return the instance
     resource_bar = ResourceBar(resources=sample_resources, resource_icons=sample_icons)

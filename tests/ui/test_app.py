@@ -3,7 +3,7 @@ import flet as ft
 import sys
 from pathlib import Path
 
-from swipe_fate.ui.app import SwipeFateApp as SwipeVerseApp
+from swipe_verse.ui.app import SwipeFateApp as SwipeVerseApp
 
 
 # Mock flet classes and functions

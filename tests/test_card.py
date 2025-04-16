@@ -1,5 +1,5 @@
 
-from swipe_fate.models.card import Card, CardChoice
+from swipe_verse.models.card import Card, CardChoice
 
 
 def test_card_initialization():

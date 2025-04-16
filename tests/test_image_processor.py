@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from swipe_fate.services.image_processor import ImageProcessor
+from swipe_verse.services.image_processor import ImageProcessor
 
 
 @pytest.fixture

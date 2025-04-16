@@ -9,7 +9,7 @@
 ## Testing
 
 - Run tests with: `python -m pytest`
-- Run tests with coverage: `python -m pytest --cov=swipe_fate`
+- Run tests with coverage: `python -m pytest --cov=swipe_verse`
 - Linting with: `python -m ruff check .`
 - Type checking with: `python -m mypy .`
 
@@ -21,9 +21,9 @@
 
 ## Project Organization
 
-- Models are in `swipe_fate/models/`
-- Services are in `swipe_fate/services/`
-- UI components are in `swipe_fate/ui/`
+- Models are in `swipe_verse/models/`
+- Services are in `swipe_verse/services/`
+- UI components are in `swipe_verse/ui/`
 - Tests are in `tests/`
 
 ## Best Practices

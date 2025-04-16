@@ -1,8 +1,8 @@
 import pytest
 
-from swipe_fate.models.config import GameConfig
-from swipe_fate.models.game_state import GameState
-from swipe_fate.services.game_logic import GameLogic
+from swipe_verse.models.config import GameConfig
+from swipe_verse.models.game_state import GameState
+from swipe_verse.services.game_logic import GameLogic
 
 
 @pytest.fixture

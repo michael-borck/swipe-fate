@@ -1,7 +1,7 @@
 import pytest
 
-from swipe_fate.models.config import Card, CardChoice, GameConfig, GameSettings, Theme
-from swipe_fate.models.game_state import GameState
+from swipe_verse.models.config import Card, CardChoice, GameConfig, GameSettings, Theme
+from swipe_verse.models.game_state import GameState
 
 
 @pytest.fixture

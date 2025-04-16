@@ -1,6 +1,6 @@
 import pytest
 
-from swipe_fate.models.card import Card, CardChoice
+from swipe_verse.models.card import Card, CardChoice
 
 
 # Mock flet classes and functions
@@ -118,8 +118,8 @@ def components(mock_flet, sample_card, sample_resources, sample_icons, mocker):
             setattr(fake_ft, attr_name, getattr(mock_flet, attr_name))
     
     # Now import components
-    from swipe_fate.ui.components.card_display import CardDisplay
-    from swipe_fate.ui.components.resource_bar import ResourceBar
+    from swipe_verse.ui.components.card_display import CardDisplay
+    from swipe_verse.ui.components.resource_bar import ResourceBar
     
     # Create mock page and components
     mock_page = mocker.MagicMock()

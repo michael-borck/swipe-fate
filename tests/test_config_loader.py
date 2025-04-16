@@ -4,8 +4,8 @@ import tempfile
 
 import pytest
 
-from swipe_fate.models.config import GameConfig
-from swipe_fate.services.config_loader import ConfigLoader
+from swipe_verse.models.config import GameConfig
+from swipe_verse.services.config_loader import ConfigLoader
 
 
 @pytest.fixture

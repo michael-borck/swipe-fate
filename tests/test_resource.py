@@ -1,5 +1,5 @@
 
-from swipe_fate.models.resource import Resource
+from swipe_verse.models.resource import Resource
 
 
 def test_resource_initialization():

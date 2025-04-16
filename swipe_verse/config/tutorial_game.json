@@ -15,10 +15,10 @@
       "accent": "#E07A5F"
     },
     "resource_icons": {
-      "knowledge": "assets/default/resource_icons/resource1.png",
-      "energy": "assets/default/resource_icons/resource2.png",
-      "time": "assets/default/resource_icons/resource3.png",
-      "mood": "assets/default/resource_icons/resource4.png"
+      "knowledge": "assets/default/resource_icons/resource.png",
+      "energy": "assets/default/resource_icons/power.png",
+      "time": "assets/default/resource_icons/people.png",
+      "mood": "assets/default/resource_icons/harmony.png"
     },
     "filters": {
       "default": "none",
@@ -53,7 +53,7 @@
       "id": "tutorial_001",
       "title": "Welcome to Swipe Verse",
       "text": "This tutorial will guide you through the basics of playing Swipe Verse. Swipe left or right to make choices. Each choice affects your resources shown at the top of the screen.",
-      "image": "assets/default/card_fronts/card1.png",
+      "image": "assets/default/card_fronts/choice.png",
       "choices": {
         "left": {
           "text": "I'd like to learn more",
@@ -81,7 +81,7 @@
       "id": "tutorial_002",
       "title": "About Resources",
       "text": "Resources are the core of gameplay. In this tutorial, you manage Knowledge, Energy, Time, and Mood. If any resource hits 0 or 100, the game ends! Keep them balanced.",
-      "image": "assets/default/card_fronts/card2.png",
+      "image": "assets/default/card_fronts/event.png",
       "choices": {
         "left": {
           "text": "Tell me about themes",
@@ -109,7 +109,7 @@
       "id": "tutorial_003",
       "title": "Game Themes",
       "text": "Swipe Verse features multiple themes that completely change the experience. Try Kingdom for medieval ruling or Business for corporate climbing. Each theme has unique cards and resources.",
-      "image": "assets/default/card_fronts/card3.png",
+      "image": "assets/default/card_fronts/oppurtunity.png",
       "choices": {
         "left": {
           "text": "Tell me about filters now",
@@ -137,7 +137,7 @@
       "id": "tutorial_004",
       "title": "Visual Filters",
       "text": "You can apply visual filters to change the look of the game. Try Pixelate for a retro feel, Grayscale for classic noir, or Cartoon for a stylized appearance. Change filters in Settings.",
-      "image": "assets/default/card_fronts/card4.png",
+      "image": "assets/default/card_fronts/challenge.png",
       "choices": {
         "left": {
           "text": "Tell me about themes",
@@ -165,7 +165,7 @@
       "id": "tutorial_005",
       "title": "Gameplay Strategy",
       "text": "Success requires balance. Pay attention to how each decision affects multiple resources at once. Sometimes the best choice is the one that causes the least harm to your critical resources.",
-      "image": "assets/default/card_fronts/card1.png",
+      "image": "assets/default/card_fronts/choice.png",
       "choices": {
         "left": {
           "text": "I understand",
@@ -193,7 +193,7 @@
       "id": "tutorial_006",
       "title": "Final Tips",
       "text": "Try different themes, experiment with choices, and have fun! Remember that each theme tells a different story, with unique challenges and resource management strategies.",
-      "image": "assets/default/card_fronts/card2.png",
+      "image": "assets/default/card_fronts/event.png",
       "choices": {
         "left": {
           "text": "Start with Kingdom theme",

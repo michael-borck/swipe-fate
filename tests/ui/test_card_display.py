@@ -1,6 +1,6 @@
 import pytest
 
-from swipe_fate.models.card import Card, CardChoice
+from swipe_verse.models.card import Card, CardChoice
 
 
 # Mock flet classes and functions
@@ -65,7 +65,7 @@ def mock_page(mocker):
 def card_display(mock_flet, sample_card, mock_page, mocker):
     """Create a CardDisplay instance for testing"""
     # Import here to use the mocked flet
-    from swipe_fate.ui.components.card_display import CardDisplay
+    from swipe_verse.ui.components.card_display import CardDisplay
     
     # Create instance
     card_display = CardDisplay(card=sample_card)

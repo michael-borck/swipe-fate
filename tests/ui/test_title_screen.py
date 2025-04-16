@@ -1,7 +1,7 @@
 import pytest
 import flet as ft
 
-from swipe_fate.ui.title_screen import TitleScreen
+from swipe_verse.ui.title_screen import TitleScreen
 
 
 # Mock flet classes and functions

@@ -1,9 +1,9 @@
 import pytest
 
-from swipe_fate.models.card import Card, CardChoice
-from swipe_fate.models.game_state import GameState
-from swipe_fate.models.resource import Resource
-from swipe_fate.services.game_logic import GameLogic
+from swipe_verse.models.card import Card, CardChoice
+from swipe_verse.models.game_state import GameState
+from swipe_verse.models.resource import Resource
+from swipe_verse.services.game_logic import GameLogic
 
 
 # Mock flet classes and functions
@@ -189,7 +189,7 @@ def game_screen(mock_flet, sample_game_state, sample_game_logic, mock_components
             setattr(fake_ft, attr_name, getattr(mock_flet, attr_name))
     
     # Now import GameScreen
-    from swipe_fate.ui.game_screen import GameScreen
+    from swipe_verse.ui.game_screen import GameScreen
     
     # Create mock callbacks
     on_new_game = mocker.MagicMock()

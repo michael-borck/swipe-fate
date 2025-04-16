@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 from PIL import Image
 
-from swipe_fate.services.asset_manager import AssetManager
+from swipe_verse.services.asset_manager import AssetManager
 
 
 @pytest.fixture
