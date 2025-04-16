@@ -5,14 +5,20 @@ import flet as ft
 
 
 def main():
-    """Entry point for the Swipe Fate game application."""
-    parser = argparse.ArgumentParser(description="Swipe Fate - A card-based decision game")
+    """Entry point for the Swipe Verse game application."""
+    parser = argparse.ArgumentParser(description="Swipe Verse - A multiverse card-based decision game")
     parser.add_argument("--config", type=str, help="Path to game configuration file")
     parser.add_argument(
         "--mode",
         choices=["ui", "tui", "cli"],
         default="ui",
         help="Game interface mode: UI (graphical), TUI (terminal), CLI (command line)",
+    )
+    parser.add_argument(
+        "--theme",
+        choices=["kingdom", "business", "science", "space"],
+        default="kingdom",
+        help="Game theme to launch with",
     )
     parser.add_argument("--assets", type=str, help="Path to custom assets directory")
     parser.add_argument("--port", type=int, default=0, help="Port number for web view (0 = auto)")
@@ -22,15 +28,21 @@ def main():
     # Import the appropriate app based on the mode
     if args.mode == "ui":
         # Use the Flet UI
-        from swipe_fate.ui.app import SwipeFateApp
+        from swipe_fate.ui.app import SwipeVerseApp
 
         def launch_ui(page: ft.Page):
             # Initialize settings
-            config_path = args.config if args.config else None
+            # If config is not specified but theme is, use the theme config
+            config_path = args.config
+            if not config_path and args.theme:
+                from pathlib import Path
+                config_dir = Path(__file__).parent / "config"
+                config_path = str(config_dir / f"{args.theme}_game.json")
+            
             assets_path = args.assets if args.assets else None
 
             # Create and add the app to the page
-            app = SwipeFateApp(page=page, config_path=config_path, assets_path=assets_path)
+            app = SwipeVerseApp(page=page, config_path=config_path, assets_path=assets_path)
             page.add(app)
 
         # Launch the app with Flet
@@ -40,7 +52,13 @@ def main():
         # Use the Terminal UI
         from swipe_fate.tui.tui_app import run_tui
 
-        config_path = args.config if args.config else None
+        # If config is not specified but theme is, use the theme config
+        config_path = args.config
+        if not config_path and args.theme:
+            from pathlib import Path
+            config_dir = Path(__file__).parent / "config"
+            config_path = str(config_dir / f"{args.theme}_game.json")
+            
         assets_path = args.assets if args.assets else None
         run_tui(config_path, assets_path)
 
@@ -48,7 +66,13 @@ def main():
         # Use the Command Line Interface
         from swipe_fate.cli.cli_app import run_cli
 
-        config_path = args.config if args.config else None
+        # If config is not specified but theme is, use the theme config
+        config_path = args.config
+        if not config_path and args.theme:
+            from pathlib import Path
+            config_dir = Path(__file__).parent / "config"
+            config_path = str(config_dir / f"{args.theme}_game.json")
+            
         assets_path = args.assets if args.assets else None
         run_cli(config_path, assets_path)
 

@@ -12,7 +12,7 @@ from swipe_fate.services.image_processor import ImageProcessor
 
 # Note: For Flet 0.27.x compatibility
 # We're using a standard class instead of UserControl which is only in newer Flet versions
-class SwipeFateApp:
+class SwipeVerseApp:
     def __init__(self, page: ft.Page, config_path: Optional[str] = None, assets_path: Optional[str] = None) -> None:
         self.page = page
         self.config_path = config_path
@@ -43,7 +43,7 @@ class SwipeFateApp:
 
     def _configure_page(self) -> None:
         """Configure the page settings"""
-        self.page.title = "Swipe Fate"
+        self.page.title = "Swipe Verse"
         self.page.theme_mode = ft.ThemeMode.SYSTEM
         self.page.padding = 0
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER

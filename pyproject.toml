@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "swipe-fate"
+name = "swipe-verse"
 version = "0.1.0"
-description = "A data-driven card-based decision game inspired by Reigns"
+description = "A multiverse card-based decision game with themes across different realities"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-swipe-fate = "swipe_fate.__main__:main"
+swipe-verse = "swipe_fate.__main__:main"
 
 [tool.ruff]
 line-length = 100

@@ -3,7 +3,7 @@ import flet as ft
 import sys
 from pathlib import Path
 
-from swipe_fate.ui.app import SwipeFateApp
+from swipe_fate.ui.app import SwipeFateApp as SwipeVerseApp
 
 
 # Mock flet classes and functions
@@ -143,7 +143,7 @@ def app(mock_flet, mock_services, mock_game_state, mock_page, mocker):
     mocker.patch("swipe_fate.ui.app.Path", autospec=True)
     
     # Create the app
-    app = SwipeFateApp(page=mock_page)
+    app = SwipeVerseApp(page=mock_page)
     
     # Connect the mocks
     app.config_loader = mock_services["config_loader"]
@@ -157,7 +157,7 @@ def app(mock_flet, mock_services, mock_game_state, mock_page, mocker):
 async def test_app_initialization(app, mock_page, mock_services):
     """Test that the app is initialized properly"""
     # Verify page configuration
-    assert app.page.title == "Swipe Fate"
+    assert app.page.title == "Swipe Verse"
     assert app.page.theme_mode == "SYSTEM"
     assert app.page.padding == 0
     assert app.page.on_resize is not None

@@ -1,4 +1,4 @@
-# Claude Instructions for Swipe-Fate
+# Claude Instructions for Swipe-Verse
 
 ## Environment Setup
 

@@ -30,7 +30,7 @@ class TitleScreen:
 
         # Title and logo
         title = ft.Text(
-            "SWIPE FATE",
+            "SWIPE VERSE",
             size=title_size,
             weight=ft.FontWeight.BOLD,
             color=ft.colors.WHITE,

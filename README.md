@@ -1,10 +1,10 @@
-# Swipe Fate
+# Swipe Verse
 
-A "Reigns-like" card-based decision game built with Python and Flet.
+A multiverse card-based decision game built with Python and Flet.
 
 ## Overview
 
-Swipe Fate is a data-driven card-based decision game where players make choices by swiping left or right on cards, managing various resources to stay in power as long as possible. The game is built using Flet, a Python framework for building cross-platform applications.
+Swipe Verse is a theme-based card decision game where players navigate different realities by swiping left or right on cards, managing various resources to succeed across multiple thematic universes. Originally inspired by "Reigns", the game has evolved into a multiverse of interconnected experiences, from medieval kingdoms to corporate boardrooms and beyond. Built using Flet, a Python framework for cross-platform applications.
 
 ## Features
 
@@ -19,8 +19,8 @@ Swipe Fate is a data-driven card-based decision game where players make choices 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/swipe-fate.git
-cd swipe-fate
+git clone https://github.com/yourusername/swipe-verse.git
+cd swipe-verse
 
 # Install with pip
 pip install -e .
@@ -30,29 +30,33 @@ pip install -e .
 
 ```bash
 # Run the game with default settings
-swipe-fate
+swipe-verse
 
 # Run with a custom configuration file
-swipe-fate --config path/to/config.json
+swipe-verse --config path/to/config.json
 
 # Run in terminal UI mode
-swipe-fate --mode tui
+swipe-verse --mode tui
 
 # Run with custom assets
-swipe-fate --assets path/to/assets/folder
+swipe-verse --assets path/to/assets/folder
+
+# Run with a specific theme
+swipe-verse --theme business  # or kingdom, science, etc.
 ```
 
 ## Game Configuration
 
-The game is data-driven and can be customized by editing JSON configuration files. See the `swipe_fate/config/default_game.json` file for an example.
+The game is data-driven and can be customized by editing JSON configuration files. Multiple theme configurations are available in the `swipe_fate/config/` directory, including `kingdom_game.json` and `business_game.json`.
 
 ### Example Configuration
 
 ```json
 {
   "game_info": {
-    "title": "Swipe Fate",
-    "description": "Rule your kingdom through the power of swiping",
+    "title": "Kingdom Verse",
+    "description": "Rule your medieval realm through the power of swiping",
+    "backstory": "The old king has died without an heir, and you've been unexpectedly chosen to rule...",
     "version": "0.1.0",
     "author": "Your Name"
   },
