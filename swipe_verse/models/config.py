@@ -62,6 +62,7 @@ class GameInfo(BaseModel):
     description: str
     version: str
     author: str
+    backstory: Optional[str] = None
 
 
 class GameConfig(BaseModel):

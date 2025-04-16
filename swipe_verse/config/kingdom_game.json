@@ -3,7 +3,8 @@
     "title": "Kingdom Fate",
     "description": "Rule your medieval kingdom through the power of swiping",
     "version": "0.1.0",
-    "author": "Swipe Fate Team"
+    "author": "Swipe Fate Team",
+    "backstory": "The old king has died without an heir, and to everyone's surprise, you've been chosen to rule the kingdom.\n\nAs the new monarch of a troubled realm, you face challenges from all sides. The royal treasury is depleted after years of extravagance, the common folk grow restless with hunger, the military demands more resources for defense, and the church seeks to extend its influence over the throne.\n\nYour advisors are divided in their loyalties, and neighboring kingdoms watch with interest - some hoping for alliance, others waiting for weakness to exploit.\n\nEvery decision you make will affect the balance of power. Will you prioritize the treasury by raising taxes, even if it means the people suffer? Will you favor the military to secure your borders, or the church to maintain social order?\n\nThe choices are yours to make. The fate of the kingdom rests in your hands. How long will your reign last, and what legacy will you leave behind?"
   },
   "theme": {
     "name": "Kingdom Theme",

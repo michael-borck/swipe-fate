@@ -141,10 +141,16 @@ class SwipeVerseApp:
         from swipe_verse.ui.title_screen import TitleScreen
 
         if screen_name == "title":
+            # Get backstory from game_logic if it exists
+            backstory = None
+            if self.game_logic and hasattr(self.game_logic, 'config') and self.game_logic.config:
+                backstory = self.game_logic.config.game_info.backstory
+                
             self.current_screen = TitleScreen(
                 on_start_game=lambda: self.page.run_async(self.navigate_to("game")),
                 on_load_config=self._handle_load_config,
                 on_settings=lambda: self.page.run_async(self.navigate_to("settings")),
+                backstory=backstory,
             )
         elif screen_name == "game":
             if not self.game_state:
@@ -180,10 +186,16 @@ class SwipeVerseApp:
             )
         else:
             # Default to title screen
+            # Get backstory if available
+            backstory = None
+            if self.game_logic and hasattr(self.game_logic, 'config') and self.game_logic.config:
+                backstory = self.game_logic.config.game_info.backstory
+                
             self.current_screen = TitleScreen(
                 on_start_game=lambda: self.page.run_async(self.navigate_to("game")),
                 on_load_config=self._handle_load_config,
                 on_settings=lambda: self.page.run_async(self.navigate_to("settings")),
+                backstory=backstory,
             )
 
         # Update the UI
