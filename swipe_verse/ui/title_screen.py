@@ -2,6 +2,8 @@ from typing import Any, Callable, Optional, Union, cast, Coroutine
 
 import flet as ft
 
+from swipe_verse.ui.components.game_selector import GameSelector
+
 
 # Note: For Flet 0.27.x compatibility
 # We're using a standard class instead of UserControl which is only in newer Flet versions
@@ -18,6 +20,12 @@ class TitleScreen:
         self.on_settings = on_settings
         self.backstory = backstory
         self.page: Optional[ft.Page] = None
+        self.game_selector: Optional[GameSelector] = None
+        
+    async def did_mount(self):
+        """Called when the component is added to the page"""
+        if self.game_selector and self.page:
+            await self.game_selector.load_games(self.page)
 
     def build(self) -> ft.Container:
         # Responsive design adjustments
@@ -98,22 +106,33 @@ class TitleScreen:
             visible=self.backstory is not None,
         )
 
-        # Layout for mobile
+        # Game selector carousel
+        self.game_selector = GameSelector(
+            on_select_game=self.on_load_config,
+            width=page_width - (padding_value * 2),
+        )
+        
+        # Layout for mobile or desktop
         content = ft.Column(
             controls=[
-                ft.Container(height=40),  # Top spacing
                 title,
                 subtitle,
-                ft.Container(height=40),  # Spacing
-                start_button,
-                ft.Container(height=20),  # Button spacing
-                load_button,
-                ft.Container(height=20),  # Button spacing
+                ft.Container(height=20),  # Spacing
+                
+                # Game selector section
+                ft.Text("Select a Game", size=18, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD),
+                ft.Container(height=10),
+                self.game_selector,
+                ft.Container(height=30),  # Spacing
+                
+                # Action buttons section
+                ft.Text("Options", size=18, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD),
+                ft.Container(height=10),
                 settings_button,
                 # Only add backstory button if backstory exists
-                ft.Container(height=20, visible=self.backstory is not None),  # Button spacing
+                ft.Container(height=20, visible=self.backstory is not None),
                 backstory_button,
-                ft.Container(height=40),  # Bottom spacing
+                ft.Container(height=20),  # Bottom spacing
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,

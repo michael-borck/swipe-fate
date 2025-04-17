@@ -1,0 +1,285 @@
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Union, Coroutine
+
+import flet as ft
+
+from swipe_verse.models.config import GameConfig
+from swipe_verse.services.config_loader import ConfigLoader
+
+
+class GameCard(ft.Container):
+    """A card representing a game in the selection carousel."""
+    
+    def __init__(
+        self,
+        config_path: str,
+        config: GameConfig,
+        card_back_path: str,
+        on_select: Callable[[str], Any],
+        width: float = 280,
+        height: float = 380,
+    ):
+        self.config_path = config_path
+        self.config = config
+        self.card_back_path = card_back_path
+        self.on_select = on_select
+        
+        # Create card content
+        card_image = ft.Image(
+            src=self.card_back_path,
+            width=width * 0.8,
+            height=height * 0.6,
+            fit=ft.ImageFit.CONTAIN,
+            border_radius=ft.border_radius.all(10),
+        )
+        
+        # Get resource icons for preview
+        resource_previews = []
+        if config.theme and config.theme.resource_icons:
+            for resource_name, icon_path in list(config.theme.resource_icons.items())[:4]:  # Limit to 4 icons
+                resource_previews.append(
+                    ft.Container(
+                        content=ft.Column([
+                            ft.Image(
+                                src=str(icon_path),
+                                width=30,
+                                height=30,
+                                fit=ft.ImageFit.CONTAIN,
+                            ),
+                            ft.Text(
+                                resource_name.capitalize(),
+                                size=10,
+                                text_align=ft.TextAlign.CENTER,
+                            )
+                        ], 
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=2,
+                        ),
+                        width=60,
+                        height=60,
+                        padding=2,
+                    )
+                )
+        
+        # Resource preview row
+        resource_row = ft.Row(
+            controls=resource_previews,
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=5,
+        )
+        
+        # Create a one-line summary of the backstory if available
+        backstory_preview = ""
+        if config.game_info.backstory:
+            # Get first sentence or limit to 60 chars
+            backstory_text = config.game_info.backstory.split('.')[0].strip()
+            if len(backstory_text) > 60:
+                backstory_preview = backstory_text[:57] + "..."
+            else:
+                backstory_preview = backstory_text + "..."
+        
+        # Build the complete card
+        card_content = ft.Column(
+            controls=[
+                ft.Container(
+                    content=ft.Text(
+                        config.game_info.title,
+                        size=20,
+                        weight=ft.FontWeight.BOLD,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    margin=ft.margin.only(bottom=5),
+                ),
+                card_image,
+                ft.Container(
+                    content=ft.Text(
+                        config.game_info.description,
+                        size=12,
+                        italic=True,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    margin=ft.margin.symmetric(vertical=5),
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        backstory_preview,
+                        size=11,
+                        color=ft.colors.WHITE70,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    margin=ft.margin.only(bottom=5),
+                    visible=backstory_preview != "",
+                ),
+                resource_row,
+                ft.Container(height=10),  # Spacing
+                ft.ElevatedButton(
+                    content=ft.Text("Play This Game"),
+                    width=width * 0.7,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.GREEN_700,
+                    ),
+                    on_click=lambda _: self.on_select(self.config_path),
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.START,
+            spacing=5,
+        )
+        
+        # Main container styling
+        super().__init__(
+            content=card_content,
+            width=width,
+            height=height,
+            border_radius=ft.border_radius.all(10),
+            bgcolor=ft.colors.with_opacity(0.1, ft.colors.WHITE),
+            border=ft.border.all(1, ft.colors.WHITE24),
+            padding=ft.padding.all(10),
+            margin=ft.margin.all(10),
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=5,
+                color=ft.colors.with_opacity(0.3, ft.colors.BLACK),
+                offset=ft.Offset(2, 2),
+            ),
+        )
+
+
+class GameSelector(ft.Row):
+    """Horizontal carousel of game options."""
+    
+    def __init__(
+        self,
+        on_select_game: Union[Callable[[str], None], Callable[[str], Coroutine[Any, Any, None]]],
+        width: float = 800,
+    ):
+        self.on_select_game = on_select_game
+        self.width = width
+        self.game_cards: List[GameCard] = []
+        self.config_loader = ConfigLoader()
+        
+        # Create scroll buttons
+        self.left_button = ft.IconButton(
+            icon=ft.icons.ARROW_BACK_IOS_ROUNDED,
+            icon_color=ft.colors.WHITE70,
+            icon_size=32,
+            on_click=self._scroll_left,
+            visible=False,  # Start invisible, show when needed
+        )
+        
+        self.right_button = ft.IconButton(
+            icon=ft.icons.ARROW_FORWARD_IOS_ROUNDED,
+            icon_color=ft.colors.WHITE70,
+            icon_size=32,
+            on_click=self._scroll_right,
+            visible=True,
+        )
+        
+        # Scrollable row for game cards
+        self.scroll_container = ft.Container(
+            content=ft.Row([], scroll=ft.ScrollMode.AUTO),
+            width=width - 100,  # Make room for buttons
+            on_scroll=self._handle_scroll,
+        )
+        
+        # Initialize the component
+        super().__init__(
+            controls=[
+                self.left_button,
+                self.scroll_container,
+                self.right_button
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+        
+    async def load_games(self, page: Optional[ft.Page] = None):
+        """Load and display available games."""
+        # Get the config directory
+        config_dir = Path(__file__).parent.parent.parent / "config"
+        
+        # Find all game JSON files
+        game_files = list(config_dir.glob("*_game.json"))
+        
+        # Clear existing cards
+        if isinstance(self.scroll_container.content, ft.Row):
+            self.scroll_container.content.controls.clear()
+            self.game_cards.clear()
+        
+        # Load configs and create cards
+        for game_file in game_files:
+            try:
+                config = await self.config_loader.load_config(str(game_file))
+                
+                # Get the card back path
+                card_back_path = config.theme.card_back
+                
+                # Create a game card
+                game_card = GameCard(
+                    config_path=str(game_file),
+                    config=config,
+                    card_back_path=card_back_path,
+                    on_select=self.on_select_game,
+                )
+                
+                # Add to the container
+                if isinstance(self.scroll_container.content, ft.Row):
+                    self.scroll_container.content.controls.append(game_card)
+                    self.game_cards.append(game_card)
+            except Exception as e:
+                print(f"Error loading game {game_file}: {e}")
+        
+        # Update visibility of scroll buttons
+        self._update_button_visibility()
+        
+        # Update the UI
+        if page:
+            page.update()
+    
+    def _scroll_left(self, _):
+        """Scroll the carousel left."""
+        if isinstance(self.scroll_container.content, ft.Row):
+            current = self.scroll_container.content.scroll_left or 0
+            new_position = max(0, current - 300)
+            self.scroll_container.content.scroll_to(
+                offset=new_position,
+                duration=300,
+                curve=ft.AnimationCurve.EASE_IN_OUT,
+            )
+            self._update_button_visibility()
+    
+    def _scroll_right(self, _):
+        """Scroll the carousel right."""
+        if isinstance(self.scroll_container.content, ft.Row):
+            current = self.scroll_container.content.scroll_left or 0
+            # Approximate max scroll position
+            max_scroll = max(0, len(self.game_cards) * 300 - self.scroll_container.width)
+            new_position = min(max_scroll, current + 300)
+            self.scroll_container.content.scroll_to(
+                offset=new_position,
+                duration=300,
+                curve=ft.AnimationCurve.EASE_IN_OUT,
+            )
+            self._update_button_visibility()
+    
+    def _handle_scroll(self, e):
+        """Handle manual scrolling events."""
+        self._update_button_visibility()
+    
+    def _update_button_visibility(self):
+        """Update the visibility of scroll buttons based on scroll position."""
+        if isinstance(self.scroll_container.content, ft.Row):
+            current = self.scroll_container.content.scroll_left or 0
+            max_scroll = max(0, len(self.game_cards) * 300 - self.scroll_container.width)
+            
+            # Show left button if not at beginning
+            self.left_button.visible = current > 0
+            
+            # Show right button if not at end
+            self.right_button.visible = current < max_scroll
+            
+            # Update the buttons
+            self.left_button.update()
+            self.right_button.update()

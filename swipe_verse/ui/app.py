@@ -202,6 +202,10 @@ class SwipeVerseApp:
         self.page.controls.clear()
         self.page.controls.append(self.current_screen)
         self.page.update()
+        
+        # Call did_mount for components that need initialization
+        if screen_name == "title" and hasattr(self.current_screen, "did_mount"):
+            await self.current_screen.did_mount()
 
     async def _handle_load_config(self, config_path: str) -> None:
         """Handle loading a new configuration"""
@@ -338,6 +342,7 @@ class SwipeVerseApp:
         )
 
         # Schedule the navigation to happen after the initial render
+        # This will trigger game selector initialization because it calls did_mount
         self.page.run_async(self.navigate_to("title"))
 
         # Container that fills the page
