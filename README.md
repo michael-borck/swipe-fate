@@ -139,8 +139,8 @@ This project uses:
 ### Development Setup
 
 ```bash
-# Install dev dependencies
-pip install -e ".[dev]"
+# Install dev dependencies (using uv to manage your environment)
+uv pip install -e ".[dev]"
 
 # Run linting
 ruff check .
@@ -150,6 +150,21 @@ mypy swipe_verse
 
 # Run tests
 pytest
+```
+
+### Pre-commit Hooks
+
+Use pre-commit to automatically format, lint, and type-check code before commits.
+
+```bash
+# Install pre-commit into your environment
+uv pip install pre-commit
+
+# Install Git hook scripts
+uv pre-commit install
+
+# Run all hooks against all files
+uv pre-commit run --all-files
 ```
 
 ## License

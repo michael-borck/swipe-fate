@@ -15,11 +15,11 @@ def sample_image():
         temp_path = temp.name
 
     # Create a simple test image
-    img = Image.new('RGB', (100, 100), color=(73, 109, 137))
+    img = Image.new("RGB", (100, 100), color=(73, 109, 137))
     img.save(temp_path)
-    
+
     yield temp_path
-    
+
     # Clean up
     os.unlink(temp_path)
 
@@ -28,13 +28,13 @@ def sample_image():
 def image_processor():
     """Create an ImageProcessor instance"""
     processor = ImageProcessor()
-    
+
     # Create a temporary cache directory
     test_cache_dir = Path(tempfile.mkdtemp())
     processor.cache_dir = test_cache_dir
-    
+
     yield processor
-    
+
     # Clean up the test cache directory
     for file in test_cache_dir.glob("*"):
         os.unlink(file)
@@ -45,11 +45,11 @@ def test_init_creates_cache_dir():
     """Test that initializing the processor creates a cache directory"""
     # Arrange & Act
     processor = ImageProcessor()
-    
+
     # Assert
     assert processor.cache_dir.exists()
     assert processor.cache_dir.is_dir()
-    assert ".swipe_fate/image_cache" in str(processor.cache_dir)
+    assert ".swipe_verse/image_cache" in str(processor.cache_dir)
 
 
 def test_process_image_missing_file(image_processor):
@@ -63,11 +63,11 @@ def test_process_image_no_filter_no_scale(image_processor, sample_image):
     """Test processing an image with no filter or scaling"""
     # Act
     result = image_processor.process_image(sample_image)
-    
+
     # Assert
     assert Path(result).exists()
     assert "no_filter_no_scale" in result
-    
+
     # Verify the image is unchanged
     original = Image.open(sample_image)
     processed = Image.open(result)
@@ -78,14 +78,14 @@ def test_process_image_with_scaling(image_processor, sample_image):
     """Test scaling an image"""
     # Arrange
     scale_factor = 0.5
-    
+
     # Act
     result = image_processor.process_image(sample_image, scale=scale_factor)
-    
+
     # Assert
     assert Path(result).exists()
     assert "no_filter_0.5" in result
-    
+
     # Verify the image is scaled
     original = Image.open(sample_image)
     processed = Image.open(result)
@@ -97,14 +97,14 @@ def test_process_image_with_filter(image_processor, sample_image):
     """Test applying a filter to an image"""
     # Arrange
     filter_name = "grayscale"
-    
+
     # Act
     result = image_processor.process_image(sample_image, filter_name=filter_name)
-    
+
     # Assert
     assert Path(result).exists()
     assert "grayscale_no_scale" in result
-    
+
     # Verify the image is grayscale
     processed = Image.open(result)
     # Check if image is grayscale by ensuring all RGB channels are equal
@@ -119,16 +119,16 @@ def test_process_image_with_filter_and_scale(image_processor, sample_image):
     # Arrange
     filter_name = "blur"
     scale_factor = 2.0
-    
+
     # Act
     result = image_processor.process_image(
         sample_image, filter_name=filter_name, scale=scale_factor
     )
-    
+
     # Assert
     assert Path(result).exists()
     assert "blur_2.0" in result
-    
+
     # Verify the image is scaled
     original = Image.open(sample_image)
     processed = Image.open(result)
@@ -140,14 +140,14 @@ def test_process_image_invalid_filter(image_processor, sample_image):
     """Test that an invalid filter name doesn't apply any filter"""
     # Arrange
     filter_name = "invalid_filter"
-    
+
     # Act
     result = image_processor.process_image(sample_image, filter_name=filter_name)
-    
+
     # Assert
     assert Path(result).exists()
     assert "invalid_filter_no_scale" in result
-    
+
     # Verify the image is unchanged (except for format conversion)
     original = Image.open(sample_image)
     processed = Image.open(result)
@@ -159,7 +159,7 @@ def test_cache_reuse(image_processor, sample_image):
     # Act
     result1 = image_processor.process_image(sample_image, filter_name="sepia")
     result2 = image_processor.process_image(sample_image, filter_name="sepia")
-    
+
     # Assert
     assert result1 == result2
 
@@ -179,7 +179,7 @@ def test_filter_methods(image_processor, sample_image, filter_name, expected_cha
     """Test all filter methods"""
     # Act
     result = image_processor.process_image(sample_image, filter_name=filter_name)
-    
+
     # Assert
     assert Path(result).exists()
     assert f"{filter_name}_no_scale" in result

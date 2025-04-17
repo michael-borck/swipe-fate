@@ -1,17 +1,19 @@
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
 import aiohttp
-from PIL import Image, ImageFilter, ImageOps
 
 
 class AssetManager:
     def __init__(self, base_path: str, default_assets_path: str):
         self.base_path = Path(base_path)
         self.default_assets_path = Path(default_assets_path)
-        self.cache: Dict[str, Union[str, bytes]] = {}
+        # Cache maps a key to the local image path
+        self.cache: Dict[str, str] = {}
 
-    async def get_image(self, image_path: str, filter_type: Optional[str] = None) -> str:
+    async def get_image(
+        self, image_path: str, filter_type: Optional[str] = None
+    ) -> str:
         """
         Load an image from filesystem or URL, apply filters if specified,
         and return path for Flet to use.
@@ -88,7 +90,9 @@ class AssetManager:
 
                     return temp_path
                 else:
-                    raise Exception(f"Failed to download {url}, status {response.status}")
+                    raise Exception(
+                        f"Failed to download {url}, status {response.status}"
+                    )
 
     async def _apply_filter(self, img_path: Path, filter_type: str) -> Path:
         """
@@ -103,23 +107,23 @@ class AssetManager:
         """
         # Get image processor from app
         from swipe_verse.services.image_processor import ImageProcessor
+
         processor = ImageProcessor()
-        
+
         # Create output directory
         output_dir = Path.home() / ".swipe_verse" / "filtered"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"{img_path.stem}_{filter_type}{img_path.suffix}"
-        
+
         # Check if filtered image already exists
         if output_path.exists():
             return output_path
-            
+
         # Process the image using ImageProcessor
         try:
             # Use the image processor service
             processed_path = processor.process_image(
-                str(img_path),
-                filter_name=filter_type
+                str(img_path), filter_name=filter_type
             )
             return Path(processed_path)
         except Exception as e:

@@ -85,14 +85,14 @@
 
 ### Additional Features
 - 📝 Save/load game functionality
-- 📝 Game statistics and achievements
+- ✅ Game statistics and achievements
 - 📝 Sound effects and audio
 - 📝 Additional themes (Fantasy, Politics)
 - 📝 Tutorial mode
 - 📝 Standardize asset naming to descriptive format
 - 📝 Filter stacking system for combined visual effects
-- 📝 Backstory and lore display for each theme
-- 📝 "Fate Multiverse" narrative linking between games
+- ✅ Backstory and lore display for each theme
+- 🔄 "Fate Multiverse" narrative linking between games (placeholder UI implemented)
 
 ### Distribution
 - 📝 Package for PyPI
@@ -111,9 +111,10 @@
 2. Standardize asset naming conventions across all themes
 3. Implement save/load functionality for game progress
 4. Begin designing Science theme assets and cards
-5. Add backstory/lore fields to configuration model
-6. Improve test coverage for ConfigLoader and AssetManager (currently ~70%)
-7. Enhance error handling when switching themes/filters
-8. Add more game content (cards, scenarios) for each theme
-9. Complete documentation with screenshots
-10. Set up CI/CD pipeline
+5. Implement full Multi-Verse Portal functionality based on ADR-0008
+6. Expand test coverage for the achievement system and game selection components
+7. Improve test coverage for ConfigLoader and AssetManager (currently ~70%)
+8. Enhance error handling when switching themes/filters
+9. Add more game content (cards, scenarios) for each theme
+10. Complete documentation with screenshots
+11. Set up CI/CD pipeline

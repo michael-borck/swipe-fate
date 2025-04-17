@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
 
 import flet as ft
 
@@ -8,11 +8,11 @@ from swipe_verse.models.card import Card
 # Note: For Flet 0.27.x compatibility, we extend GestureDetector instead of UserControl
 class CardDisplay(ft.GestureDetector):
     def __init__(
-        self, 
-        card: Card, 
-        on_swipe_left: Optional[Callable[[ft.DragEndEvent], None]] = None, 
-        on_swipe_right: Optional[Callable[[ft.DragEndEvent], None]] = None, 
-        **kwargs: Any
+        self,
+        card: Card,
+        on_swipe_left: Optional[Callable[[ft.DragEndEvent], None]] = None,
+        on_swipe_right: Optional[Callable[[ft.DragEndEvent], None]] = None,
+        **kwargs: Any,
     ) -> None:
         self.card = card
         self.on_swipe_left = on_swipe_left
@@ -34,18 +34,18 @@ class CardDisplay(ft.GestureDetector):
     def build(self) -> ft.Container:
         # Responsive sizing
         page_width = 300
-        if self.page and hasattr(self.page, 'width') and self.page.width is not None:
+        if self.page and hasattr(self.page, "width") and self.page.width is not None:
             page_width = self.page.width
-            
+
         container_width = min(350, page_width * 0.8)
         container_height = container_width * 1.5  # 3:2 aspect ratio
-        
+
         # Calculate inner content dimensions
         image_width = container_width * 0.85  # Leave space for borders
         image_height = image_width * 0.8  # 250x200 aspect ratio for artwork
         title_height = container_height * 0.1
         text_height = container_height * 0.25
-        
+
         # Card title
         card_title = ft.Container(
             content=ft.Text(
@@ -60,7 +60,7 @@ class CardDisplay(ft.GestureDetector):
             alignment=ft.alignment.center,
             padding=ft.padding.only(top=10),
         )
-        
+
         # Card image
         self.card_image = ft.Image(
             src=self.card.image,
@@ -68,7 +68,7 @@ class CardDisplay(ft.GestureDetector):
             height=image_height,
             fit=ft.ImageFit.CONTAIN,
         )
-        
+
         # Card text
         card_text = ft.Container(
             content=ft.Text(
@@ -82,7 +82,7 @@ class CardDisplay(ft.GestureDetector):
             padding=ft.padding.all(8),
             alignment=ft.alignment.center,
         )
-        
+
         # Combine all elements in a column
         card_content = ft.Column(
             controls=[
@@ -149,7 +149,8 @@ class CardDisplay(ft.GestureDetector):
 
         # Add border change to indicate the swipe direction
         if delta_x > 20:  # Right swipe - positive choice
-            self.card_container.border = ft.border.all(3, ft.colors.GREEN)
+            # Increase border thickness to indicate swipe
+            self.card_container.border = ft.border.all(2, ft.colors.GREEN)
             # Add subtle glow effect for right swipe
             self.card_container.shadow = ft.BoxShadow(
                 spread_radius=1,
@@ -158,7 +159,8 @@ class CardDisplay(ft.GestureDetector):
                 offset=ft.Offset(0, 0),
             )
         elif delta_x < -20:  # Left swipe - negative choice
-            self.card_container.border = ft.border.all(3, ft.colors.RED)
+            # Increase border thickness to indicate swipe
+            self.card_container.border = ft.border.all(2, ft.colors.RED)
             # Add subtle glow effect for left swipe
             self.card_container.shadow = ft.BoxShadow(
                 spread_radius=1,
@@ -186,10 +188,11 @@ class CardDisplay(ft.GestureDetector):
         self.is_swiping = False
         delta_x = self.current_x - self.start_x
 
-        # Reset the card position with animation
+        # Reset the card position and clear swipe indication
         self.card_container.offset = ft.transform.Offset(0, 0)
         self.card_container.rotate = ft.transform.Rotate(0)
-        self.card_container.border = ft.border.all(1, ft.colors.BLACK12)
+        # Remove border after swipe ends
+        self.card_container.border = None
         # Reset to default shadow
         self.card_container.shadow = ft.BoxShadow(
             spread_radius=1,
@@ -209,26 +212,8 @@ class CardDisplay(ft.GestureDetector):
     def update_card(self, card: Card) -> None:
         """Update the card being displayed"""
         self.card = card
-        
-        # Since we rebuilt the entire column, we need to rebuild the container
-        if self.card_container and isinstance(self.card_container.content, ft.Column):
-            column = self.card_container.content
-            
-            # Update title
-            if column.controls and isinstance(column.controls[0], ft.Container):
-                title_container = column.controls[0]
-                if isinstance(title_container.content, ft.Text):
-                    title_container.content.value = card.title
-            
-            # Update image
-            if self.card_image:
-                self.card_image.src = card.image
-                
-            # Update text
-            if len(column.controls) > 2 and isinstance(column.controls[2], ft.Container):
-                text_container = column.controls[2]
-                if isinstance(text_container.content, ft.Text):
-                    text_container.content.value = card.text
-            
-            # Force update
-            self.update()
+        # Update the displayed image if available
+        if self.card_image:
+            self.card_image.src = card.image
+        # Trigger UI update
+        self.update()

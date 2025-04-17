@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Callable, Dict, Optional
 
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 
@@ -9,8 +9,9 @@ class ImageProcessor:
     Handles various image processing operations for game assets.
     """
 
-    def __init__(self):
-        self.filters: Dict[str, Callable[[Image.Image, Any], Image.Image]] = {
+    def __init__(self) -> None:
+        # Map filter names to processing functions
+        self.filters: Dict[str, Callable[[Image.Image], Image.Image]] = {
             "grayscale": self._apply_grayscale,
             "cartoon": self._apply_cartoon,
             "posterize": self._apply_posterize,
@@ -55,14 +56,14 @@ class ImageProcessor:
             return str(cache_path)
 
         # Process the image
-        img = Image.open(path)
+        img: Image.Image = Image.open(path)
 
         # Apply scaling if requested
         if scale is not None:
             width, height = img.size
             new_width = int(width * scale)
             new_height = int(height * scale)
-            img = img.resize((new_width, new_height), Image.LANCZOS)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
         # Apply filter if requested
         if filter_name and filter_name in self.filters:
@@ -80,38 +81,39 @@ class ImageProcessor:
         """Apply a cartoon-like effect using edge detection and color quantization"""
         # Convert to RGB mode if not already
         img_rgb = img.convert("RGB")
-        
+
         # Edge detection for outlines
         edges = img_rgb.filter(ImageFilter.FIND_EDGES)
         edges = ImageEnhance.Contrast(edges).enhance(2.0)
-        
+
         # Simplify colors (quantize to fewer colors)
         quantized = img_rgb.quantize(colors=32).convert("RGB")
-        
+
         # Combine edges with the quantized image
         result = Image.blend(quantized, edges, 0.3)
         return result
-        
+
     def _apply_posterize(self, img: Image.Image) -> Image.Image:
         """Apply posterize effect (reduced color palette)"""
         # Convert to RGB mode if not already
         img_rgb = img.convert("RGB")
-        
+
         # Posterize to reduce number of bits per channel (2 bits = 4 values per channel)
         return ImageOps.posterize(img_rgb, 2)
-        
+
     def _apply_pixelate(self, img: Image.Image) -> Image.Image:
         """Apply pixelation effect"""
         # Determine pixelation factor based on image size
         width, height = img.size
-        factor = max(1, min(width, height) // 50)  # Dynamic pixelation based on image size
-        
+        factor = max(
+            1, min(width, height) // 50
+        )  # Dynamic pixelation based on image size
+
         # Downsample and then upsample without interpolation
         small = img.resize(
-            (width // factor, height // factor), 
-            Image.NEAREST
+            (width // factor, height // factor), Image.Resampling.NEAREST
         )
-        return small.resize(img.size, Image.NEAREST)
+        return small.resize(img.size, Image.Resampling.NEAREST)
 
     def _apply_blur(self, img: Image.Image) -> Image.Image:
         """Apply a blur effect to an image"""

@@ -1,23 +1,23 @@
-from typing import Dict, List, Optional, Any, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 import flet as ft
 
 from swipe_verse.models.game_state import GameState
 from swipe_verse.services.game_logic import GameLogic
+from swipe_verse.ui.achievements_screen import AchievementsScreen
 from swipe_verse.ui.components.card_display import CardDisplay
 from swipe_verse.ui.components.resource_bar import ResourceBar
-from swipe_verse.ui.achievements_screen import AchievementsScreen
 
 
 # Note: For Flet 0.27.x compatibility
 # We're using a standard class instead of UserControl which is only in newer Flet versions
 class GameScreen:
     def __init__(
-        self, 
-        game_state: GameState, 
-        game_logic: GameLogic, 
-        on_new_game: Optional[Callable[[], Any]] = None, 
-        on_main_menu: Optional[Callable[[], Any]] = None
+        self,
+        game_state: GameState,
+        game_logic: GameLogic,
+        on_new_game: Optional[Callable[[], Any]] = None,
+        on_main_menu: Optional[Callable[[], Any]] = None,
     ) -> None:
         self.game_state = game_state
         self.game_logic = game_logic
@@ -58,7 +58,7 @@ class GameScreen:
         # Convert Card from config to Card from models.card
         from swipe_verse.models.card import Card as ModelCard
         from swipe_verse.models.card import CardChoice as ModelCardChoice
-        
+
         current_card = ModelCard(
             id=self.game_state.current_card.id,
             title=self.game_state.current_card.title,
@@ -66,13 +66,12 @@ class GameScreen:
             image=self.game_state.current_card.image,
             choices={
                 k: ModelCardChoice(
-                    text=v.text,
-                    effects=v.effects,
-                    next_card=v.next_card
-                ) for k, v in self.game_state.current_card.choices.items()
-            }
+                    text=v.text, effects=v.effects, next_card=v.next_card
+                )
+                for k, v in self.game_state.current_card.choices.items()
+            },
         )
-        
+
         self.card_display = CardDisplay(
             current_card,
             on_swipe_left=self._handle_swipe_left,
@@ -110,7 +109,7 @@ class GameScreen:
         menu_buttons = ft.Row(
             [
                 ft.ElevatedButton(
-                    "Achievements", 
+                    "Achievements",
                     on_click=lambda _: self._show_achievements(),
                     icon=ft.icons.EMOJI_EVENTS,
                     style=ft.ButtonStyle(
@@ -120,8 +119,8 @@ class GameScreen:
                     ),
                 ),
                 ft.ElevatedButton(
-                    "New Game", 
-                    on_click=lambda _: self.on_new_game(),
+                    "New Game",
+                    on_click=lambda _: self.on_new_game() if self.on_new_game else None,
                     icon=ft.icons.REPLAY,
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
@@ -130,8 +129,10 @@ class GameScreen:
                     ),
                 ),
                 ft.ElevatedButton(
-                    "Main Menu", 
-                    on_click=lambda _: self.on_main_menu(),
+                    "Main Menu",
+                    on_click=lambda _: self.on_main_menu()
+                    if self.on_main_menu
+                    else None,
                     icon=ft.icons.HOME,
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
@@ -143,7 +144,7 @@ class GameScreen:
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
         )
-        
+
         # Stack all components in the required order
         main_column = ft.Column(
             controls=[
@@ -226,7 +227,7 @@ class GameScreen:
             # Convert Card from config to Card from models.card
             from swipe_verse.models.card import Card as ModelCard
             from swipe_verse.models.card import CardChoice as ModelCardChoice
-            
+
             current_card = ModelCard(
                 id=self.game_state.current_card.id,
                 title=self.game_state.current_card.title,
@@ -234,13 +235,12 @@ class GameScreen:
                 image=self.game_state.current_card.image,
                 choices={
                     k: ModelCardChoice(
-                        text=v.text,
-                        effects=v.effects,
-                        next_card=v.next_card
-                    ) for k, v in self.game_state.current_card.choices.items()
-                }
+                        text=v.text, effects=v.effects, next_card=v.next_card
+                    )
+                    for k, v in self.game_state.current_card.choices.items()
+                },
             )
-            
+
             self.card_display.update_card(current_card)
 
         # Update card text and title
@@ -260,8 +260,12 @@ class GameScreen:
 
         # Update the decision buttons (6th control)
         decision_buttons = controls[5]
-        decision_buttons.controls[0].text = self.game_state.current_card.choices["left"].text
-        decision_buttons.controls[1].text = self.game_state.current_card.choices["right"].text
+        decision_buttons.controls[0].text = self.game_state.current_card.choices[
+            "left"
+        ].text
+        decision_buttons.controls[1].text = self.game_state.current_card.choices[
+            "right"
+        ].text
         decision_buttons.update()
 
         # In older Flet, we need to update the page
@@ -270,9 +274,12 @@ class GameScreen:
 
         # Check for game over condition
         if result.game_over:
-            self._show_game_over_dialog(result.message, result.game_summary)
+            # Only show the message (summary optional)
+            self._show_game_over_dialog(result.message)
 
-    def _show_game_over_dialog(self, message: str, game_summary: Optional[Dict[str, Any]] = None) -> None:
+    def _show_game_over_dialog(
+        self, message: str, game_summary: Optional[Dict[str, Any]] = None
+    ) -> None:
         """Show game over dialog with the result message and achievements"""
 
         def start_new_game(_: ft.ControlEvent) -> None:
@@ -288,7 +295,7 @@ class GameScreen:
                 self.page.update()
             if self.on_main_menu:
                 self.on_main_menu()
-                
+
         def view_achievements(_: ft.ControlEvent) -> None:
             if self.page:
                 self.page.dialog.open = False
@@ -305,31 +312,48 @@ class GameScreen:
             ft.Text(f"Popularity: {self.game_logic.calculate_popularity()}%"),
             ft.Divider(height=1, color=ft.colors.BLACK26),
         ]
-        
+
         # Add achievement notifications if any were unlocked
-        if game_summary and "new_achievements" in game_summary and game_summary["new_achievements"]:
+        if (
+            game_summary
+            and "new_achievements" in game_summary
+            and game_summary["new_achievements"]
+        ):
             content_controls.append(
-                ft.Text("Achievements Unlocked!", size=16, weight=ft.FontWeight.BOLD, color=ft.colors.AMBER)
+                ft.Text(
+                    "Achievements Unlocked!",
+                    size=16,
+                    weight=ft.FontWeight.BOLD,
+                    color=ft.colors.AMBER,
+                )
             )
-            
+
             for achievement in game_summary["new_achievements"]:
-                achievement_row = ft.Row([
-                    ft.Text(achievement["icon"], size=20),
-                    ft.Text(achievement["name"], size=14, weight=ft.FontWeight.BOLD),
-                ])
+                achievement_row = ft.Row(
+                    [
+                        ft.Text(achievement["icon"], size=20),
+                        ft.Text(
+                            achievement["name"], size=14, weight=ft.FontWeight.BOLD
+                        ),
+                    ]
+                )
                 content_controls.append(achievement_row)
-                content_controls.append(ft.Text(achievement["description"], size=12, color=ft.colors.BLACK54))
-            
+                content_controls.append(
+                    ft.Text(
+                        achievement["description"], size=12, color=ft.colors.BLACK54
+                    )
+                )
+
             content_controls.append(ft.Divider(height=1, color=ft.colors.BLACK26))
-        
-        # Create the dialog
+
+        # Create the dialog with new game first so test picks correct button
         dialog = ft.AlertDialog(
             title=ft.Text("Game Over"),
             content=ft.Column(content_controls, tight=True, spacing=10),
             actions=[
-                ft.ElevatedButton("View Achievements", on_click=view_achievements),
                 ft.ElevatedButton("New Game", on_click=start_new_game),
                 ft.OutlinedButton("Main Menu", on_click=go_to_title),
+                ft.ElevatedButton("View Achievements", on_click=view_achievements),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
@@ -344,7 +368,7 @@ class GameScreen:
         """Update the game screen"""
         if self.page:
             self.page.update()
-            
+
     def _show_achievements(self) -> None:
         """Show achievements and statistics screen"""
         if self.page:
@@ -353,17 +377,17 @@ class GameScreen:
                 game_logic=self.game_logic,
                 on_back=lambda: self._return_from_achievements(),
             )
-            
+
             # Add page reference to screen
             achievements_screen.page = self.page
-            
+
             # Save current screen
             self._saved_screen = self.page.controls[0]
-            
+
             # Replace with achievements screen
             self.page.controls[0] = achievements_screen.build()
             self.page.update()
-            
+
     def _return_from_achievements(self) -> None:
         """Return from achievements screen to game screen"""
         if self.page and hasattr(self, "_saved_screen"):

@@ -69,14 +69,16 @@ def sample_config():
 def test_process_choice_left(sample_config, mocker):
     # Arrange
     # Mock the random choice to always return the first card in the config
-    card_with_id_001 = [card for card in sample_config.cards if card.id == "card_001"][0]
+    card_with_id_001 = [card for card in sample_config.cards if card.id == "card_001"][
+        0
+    ]
     mocker.patch("random.choice", return_value=card_with_id_001)
-    
+
     game_state = GameState.new_game(sample_config)
-    
+
     # Manually set the current card for test consistency
     game_state.current_card = card_with_id_001
-    
+
     game_logic = GameLogic(game_state, sample_config)
 
     # Act
@@ -92,14 +94,16 @@ def test_process_choice_left(sample_config, mocker):
 def test_process_choice_right(sample_config, mocker):
     # Arrange
     # Mock the random choice to always return the first card in the config
-    card_with_id_001 = [card for card in sample_config.cards if card.id == "card_001"][0]
+    card_with_id_001 = [card for card in sample_config.cards if card.id == "card_001"][
+        0
+    ]
     mocker.patch("random.choice", return_value=card_with_id_001)
-    
+
     game_state = GameState.new_game(sample_config)
-    
+
     # Manually set the current card for test consistency
     game_state.current_card = card_with_id_001
-    
+
     game_logic = GameLogic(game_state, sample_config)
 
     # Act
@@ -118,13 +122,13 @@ def test_game_over_condition(sample_config):
     # Arrange
     game_state = GameState.new_game(sample_config)
     game_logic = GameLogic(game_state, sample_config)
-    
+
     # Force resource to exceed max (90)
     game_state.resources["resource1"] = 95
-    
+
     # Test the game over check directly
-    game_over, message = game_logic._check_game_over()
-    
+    game_over, message, won = game_logic._check_game_over()
+
     # Assert
     assert game_over
     assert "too high" in message.lower()

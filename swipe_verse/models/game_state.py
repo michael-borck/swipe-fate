@@ -1,6 +1,6 @@
-from typing import Dict, Set
+from typing import Any, Dict, Set
 
-from swipe_verse.models.config import Card, GameSettings, Theme
+from swipe_verse.models.config import Card, GameConfig, GameSettings, Theme
 
 
 class GameState:
@@ -33,7 +33,12 @@ class GameState:
         self.end_message = ""
 
     @classmethod
-    def new_game(cls, config, player_name: str = "Player", difficulty: str = "standard"):
+    def new_game(
+        cls,
+        config: GameConfig,
+        player_name: str = "Player",
+        difficulty: str = "standard",
+    ) -> "GameState":
         """Create a new game state from configuration"""
         # Initialize resources based on config
         resources = {
@@ -71,7 +76,7 @@ class GameState:
         }
 
     @classmethod
-    def load_game(cls, save_data: dict, config):
+    def load_game(cls, save_data: Dict[str, Any], config: GameConfig) -> "GameState":
         """Load game state from saved data and config"""
         # Find the current card by ID
         current_card = None

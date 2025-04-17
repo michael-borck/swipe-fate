@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from swipe_verse.models.config import Card, GameConfig
 from swipe_verse.models.game_state import GameState
@@ -7,7 +7,12 @@ from swipe_verse.services.game_history import GameHistory
 
 
 class GameResult:
-    def __init__(self, game_over: bool = False, message: str = "", game_summary: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        game_over: bool = False,
+        message: str = "",
+        game_summary: Optional[Dict[str, Any]] = None,
+    ):
         self.game_over = game_over
         self.message = message
         self.game_summary = game_summary
@@ -32,7 +37,9 @@ class GameLogic:
         choice = current_card.choices[direction]
 
         # Apply effects on resources based on difficulty
-        difficulty_mod = self.game_state.settings.difficulty_modifiers[self.game_state.difficulty]
+        difficulty_mod = self.game_state.settings.difficulty_modifiers[
+            self.game_state.difficulty
+        ]
 
         for resource_id, value in choice.effects.items():
             if resource_id in self.game_state.resources:
@@ -67,7 +74,7 @@ class GameLogic:
         formula = self.config.game_settings.stats.popularity_formula
 
         # Replace resource references with actual values
-        def replace_resource(match):
+        def replace_resource(match: re.Match) -> str:
             resource_name = match.group(1)
             return str(self.game_state.resources.get(resource_name, 0))
 
@@ -84,7 +91,9 @@ class GameLogic:
             print(f"Error evaluating popularity formula: {e}")
             # Default fallback - average of all resources
             if self.game_state.resources:
-                return sum(self.game_state.resources.values()) // len(self.game_state.resources)
+                return sum(self.game_state.resources.values()) // len(
+                    self.game_state.resources
+                )
             return 50
 
     def calculate_progress(self) -> int:
@@ -109,7 +118,7 @@ class GameLogic:
     def _check_game_over(self) -> Tuple[bool, str, bool]:
         """
         Check if any game over conditions are met.
-        
+
         Returns:
             Tuple of (game_over, message, won)
             - game_over: True if game is over
@@ -131,7 +140,11 @@ class GameLogic:
         # Check victory conditions
         # For now, consider it a win if player survives for 20+ turns
         if self.game_state.turn_count >= 20:
-            return True, f"Victory! You've ruled successfully for {self.game_state.turn_count} {self.game_state.settings.turn_unit}!", True
+            return (
+                True,
+                f"Victory! You've ruled successfully for {self.game_state.turn_count} {self.game_state.settings.turn_unit}!",
+                True,
+            )
 
         # Could add other game over conditions here
         # - Turn limit reached
@@ -157,7 +170,9 @@ class GameLogic:
         import random
 
         # Filter out cards that require specific conditions
-        available_cards = [card for card in self.config.cards if self._card_conditions_met(card)]
+        available_cards = [
+            card for card in self.config.cards if self._card_conditions_met(card)
+        ]
 
         if not available_cards:
             # If no cards available, reset seen cards and try again
@@ -183,15 +198,15 @@ class GameLogic:
 
         # For now, just avoid showing recently seen cards
         return card.id not in self.game_state.seen_cards
-        
+
     def get_achievements(self) -> list:
         """Get achievements list with unlock status."""
         return self.history.get_achievements()
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Get gameplay statistics."""
         return self.history.get_statistics()
-    
+
     def get_recent_games(self, limit: int = 5) -> list:
         """Get most recent game records."""
         return self.history.get_recent_games(limit)

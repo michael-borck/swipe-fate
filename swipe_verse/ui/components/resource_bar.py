@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 import flet as ft
 
@@ -11,7 +11,9 @@ class ResourceBar:
     with a fill indicator rather than numeric values.
     """
 
-    def __init__(self, resources: Dict[str, int], resource_icons: Dict[str, str], **kwargs: Any) -> None:
+    def __init__(
+        self, resources: Dict[str, int], resource_icons: Dict[str, str], **kwargs: Any
+    ) -> None:
         self.resources = resources
         self.resource_icons = resource_icons
         self.resource_controls: Dict[str, ft.Tooltip] = {}
@@ -38,7 +40,9 @@ class ResourceBar:
         icon_path = self.resource_icons[resource_id]
 
         # The filled (colored) version
-        filled_icon = ft.Image(src=icon_path, width=50, height=50, fit=ft.ImageFit.CONTAIN)
+        filled_icon = ft.Image(
+            src=icon_path, width=50, height=50, fit=ft.ImageFit.CONTAIN
+        )
 
         # The unfilled (greyed out) version - positioned at the top
         # and clipped based on resource value
@@ -59,7 +63,9 @@ class ResourceBar:
         )
 
         # Stack the filled and unfilled versions
-        icon_stack = ft.Stack(controls=[filled_icon, unfilled_icon], width=50, height=50)
+        icon_stack = ft.Stack(
+            controls=[filled_icon, unfilled_icon], width=50, height=50
+        )
 
         # Add a tooltip showing the resource name
         return ft.Tooltip(message=resource_id.capitalize(), content=icon_stack)

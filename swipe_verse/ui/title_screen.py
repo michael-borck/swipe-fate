@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Union, cast, Coroutine
+from typing import Any, Callable, Coroutine, Optional, Union
 
 import flet as ft
 
@@ -11,7 +11,9 @@ class TitleScreen:
     def __init__(
         self,
         on_start_game: Callable[[], Any],
-        on_load_config: Union[Callable[[str], None], Callable[[str], Coroutine[Any, Any, Any]]],
+        on_load_config: Union[
+            Callable[[str], None], Callable[[str], Coroutine[Any, Any, Any]]
+        ],
         on_settings: Callable[[], Any],
         backstory: Optional[str] = None,
     ) -> None:
@@ -21,7 +23,7 @@ class TitleScreen:
         self.backstory = backstory
         self.page: Optional[ft.Page] = None
         self.game_selector: Optional[GameSelector] = None
-        
+
     async def did_mount(self):
         """Called when the component is added to the page"""
         if self.game_selector and self.page:
@@ -30,9 +32,9 @@ class TitleScreen:
     def build(self) -> ft.Container:
         # Responsive design adjustments
         page_width = 800  # Default width
-        if self.page and hasattr(self.page, 'width') and self.page.width is not None:
+        if self.page and hasattr(self.page, "width") and self.page.width is not None:
             page_width = self.page.width
-            
+
         is_mobile = page_width < 600
         padding_value = 20 if is_mobile else 40
         title_size = 32 if is_mobile else 48
@@ -56,7 +58,7 @@ class TitleScreen:
         )
 
         # Main menu buttons
-        start_button = ft.ElevatedButton(
+        ft.ElevatedButton(
             content=ft.Text("New Game", size=18),
             width=button_width,
             height=50,
@@ -68,7 +70,7 @@ class TitleScreen:
             on_click=lambda _: self.on_start_game(),
         )
 
-        load_button = ft.ElevatedButton(
+        ft.ElevatedButton(
             content=ft.Text("Load Game", size=18),
             width=button_width,
             height=50,
@@ -91,7 +93,7 @@ class TitleScreen:
             ),
             on_click=lambda _: self.on_settings(),
         )
-        
+
         # Backstory button (only shown if backstory is available)
         backstory_button = ft.ElevatedButton(
             content=ft.Text("Backstory", size=18),
@@ -111,22 +113,27 @@ class TitleScreen:
             on_select_game=self.on_load_config,
             width=page_width - (padding_value * 2),
         )
-        
+
         # Layout for mobile or desktop
         content = ft.Column(
             controls=[
                 title,
                 subtitle,
                 ft.Container(height=20),  # Spacing
-                
                 # Game selector section
-                ft.Text("Select a Game", size=18, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD),
+                ft.Text(
+                    "Select a Game",
+                    size=18,
+                    color=ft.colors.WHITE,
+                    weight=ft.FontWeight.BOLD,
+                ),
                 ft.Container(height=10),
                 self.game_selector,
                 ft.Container(height=30),  # Spacing
-                
                 # Action buttons section
-                ft.Text("Options", size=18, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD),
+                ft.Text(
+                    "Options", size=18, color=ft.colors.WHITE, weight=ft.FontWeight.BOLD
+                ),
                 ft.Container(height=10),
                 settings_button,
                 # Only add backstory button if backstory exists
@@ -164,7 +171,7 @@ class TitleScreen:
 
         def close_dialog(load: bool = False) -> None:
             # Close the dialog
-            if self.page and hasattr(self.page, 'dialog'):
+            if self.page and hasattr(self.page, "dialog"):
                 self.page.dialog.open = False
                 self.page.update()
 
@@ -207,12 +214,14 @@ class TitleScreen:
         dialog.content.controls.append(browse_button)
 
         # Register the file picker
-        if self.page and hasattr(self.page, 'overlay'):
+        if self.page and hasattr(self.page, "overlay"):
             if not self.page.overlay:
-                self.page.overlay.append(ft.FilePicker(on_result=self._handle_file_picker_result))
+                self.page.overlay.append(
+                    ft.FilePicker(on_result=self._handle_file_picker_result)
+                )
 
             # Show the dialog
-            if hasattr(self.page, 'dialog'):
+            if hasattr(self.page, "dialog"):
                 self.page.dialog = dialog
                 self.page.dialog.open = True
                 self.page.update()
@@ -224,19 +233,24 @@ class TitleScreen:
             file_path = e.files[0].path
 
             # Update the text field in the dialog
-            if self.page and hasattr(self.page, 'dialog') and self.page.dialog and hasattr(self.page.dialog, "content"):
+            if (
+                self.page
+                and hasattr(self.page, "dialog")
+                and self.page.dialog
+                and hasattr(self.page.dialog, "content")
+            ):
                 for control in self.page.dialog.content.controls:
                     if isinstance(control, ft.TextField):
                         control.value = file_path
                         break
 
                 self.page.dialog.update()
-                
+
     def _show_backstory_dialog(self, e: ft.ControlEvent) -> None:
         """Show dialog with game backstory"""
         if not self.backstory:
             return
-            
+
         # Create scrollable content for the backstory text
         backstory_text = ft.SelectionArea(
             content=ft.Text(
@@ -245,14 +259,14 @@ class TitleScreen:
                 text_align=ft.TextAlign.LEFT,
             )
         )
-        
+
         # Wrap in a scrollable container
         scrollable_content = ft.Container(
             content=backstory_text,
             padding=10,
             height=400,  # Fixed height for the content area
         )
-        
+
         # Create the dialog with scrolling
         dialog = ft.AlertDialog(
             title=ft.Text("Backstory", size=20, weight=ft.FontWeight.BOLD),
@@ -269,15 +283,15 @@ class TitleScreen:
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        
+
         # Show the dialog
-        if self.page and hasattr(self.page, 'dialog'):
+        if self.page and hasattr(self.page, "dialog"):
             self.page.dialog = dialog
             self.page.dialog.open = True
             self.page.update()
-            
+
     def _close_backstory_dialog(self, e: ft.ControlEvent) -> None:
         """Close the backstory dialog"""
-        if self.page and hasattr(self.page, 'dialog'):
+        if self.page and hasattr(self.page, "dialog"):
             self.page.dialog.open = False
             self.page.update()

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union, Coroutine
+from typing import Any, Dict, Optional
 
 import flet as ft
 
@@ -13,7 +13,12 @@ from swipe_verse.services.image_processor import ImageProcessor
 # Note: For Flet 0.27.x compatibility
 # We're using a standard class instead of UserControl which is only in newer Flet versions
 class SwipeVerseApp:
-    def __init__(self, page: ft.Page, config_path: Optional[str] = None, assets_path: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        page: ft.Page,
+        config_path: Optional[str] = None,
+        assets_path: Optional[str] = None,
+    ) -> None:
         self.page = page
         self.config_path = config_path
 
@@ -33,7 +38,7 @@ class SwipeVerseApp:
         # Game state
         self.game_state: Optional[GameState] = None
         self.game_logic: Optional[GameLogic] = None
-        self.current_screen: Optional[Any] = None
+        self.current_screen: Any = None
         self.loading: ft.ProgressRing
         self.is_mobile: bool = False
         self.current_filter: Optional[str] = None
@@ -64,7 +69,7 @@ class SwipeVerseApp:
         self.is_mobile = self.page.width < 600 if self.page.width is not None else False
 
         # Update the current screen if it exists
-        if self.current_screen and hasattr(self.current_screen, 'update'):
+        if self.current_screen and hasattr(self.current_screen, "update"):
             self.current_screen.update()
 
     def _handle_window_event(self, e: ft.ControlEvent) -> None:
@@ -89,14 +94,17 @@ class SwipeVerseApp:
         try:
             # Store the config path for theme detection
             self.config_path = config_path
-            
+
             config = await self.config_loader.load_config(config_path)
             self.game_state = GameState.new_game(config)
             if self.game_state:  # Extra safety check
                 self.game_logic = GameLogic(self.game_state, config)
-                
+
                 # Set current filter from game state if it exists
-                if hasattr(self.game_state, 'active_filter') and self.game_state.active_filter:
+                if (
+                    hasattr(self.game_state, "active_filter")
+                    and self.game_state.active_filter
+                ):
                     self.current_filter = self.game_state.active_filter
 
             # Preload assets in background
@@ -122,15 +130,13 @@ class SwipeVerseApp:
 
         # Preload card back with current filter if any
         await self.asset_manager.get_image(
-            str(self.game_state.theme.card_back),
-            filter_type=self.current_filter
+            str(self.game_state.theme.card_back), filter_type=self.current_filter
         )
 
         # Preload resource icons with current filter if any
         for icon_path in self.game_state.theme.resource_icons.values():
             await self.asset_manager.get_image(
-                str(icon_path),
-                filter_type=self.current_filter
+                str(icon_path), filter_type=self.current_filter
             )
 
     async def navigate_to(self, screen_name: str, **kwargs: Any) -> None:
@@ -143,9 +149,13 @@ class SwipeVerseApp:
         if screen_name == "title":
             # Get backstory from game_logic if it exists
             backstory = None
-            if self.game_logic and hasattr(self.game_logic, 'config') and self.game_logic.config:
+            if (
+                self.game_logic
+                and hasattr(self.game_logic, "config")
+                and self.game_logic.config
+            ):
                 backstory = self.game_logic.config.game_info.backstory
-                
+
             self.current_screen = TitleScreen(
                 on_start_game=lambda: self.page.run_async(self.navigate_to("game")),
                 on_load_config=self._handle_load_config,
@@ -188,9 +198,13 @@ class SwipeVerseApp:
             # Default to title screen
             # Get backstory if available
             backstory = None
-            if self.game_logic and hasattr(self.game_logic, 'config') and self.game_logic.config:
+            if (
+                self.game_logic
+                and hasattr(self.game_logic, "config")
+                and self.game_logic.config
+            ):
                 backstory = self.game_logic.config.game_info.backstory
-                
+
             self.current_screen = TitleScreen(
                 on_start_game=lambda: self.page.run_async(self.navigate_to("game")),
                 on_load_config=self._handle_load_config,
@@ -202,10 +216,15 @@ class SwipeVerseApp:
         self.page.controls.clear()
         self.page.controls.append(self.current_screen)
         self.page.update()
-        
+
         # Call did_mount for components that need initialization
         if screen_name == "title" and hasattr(self.current_screen, "did_mount"):
-            await self.current_screen.did_mount()
+            # Support sync or async did_mount
+            import inspect
+
+            result = self.current_screen.did_mount()
+            if inspect.isawaitable(result):
+                await result
 
     async def _handle_load_config(self, config_path: str) -> None:
         """Handle loading a new configuration"""
@@ -232,75 +251,77 @@ class SwipeVerseApp:
         # Get player name and difficulty
         player_name = settings.get("player_name", "Player")
         difficulty = settings.get("difficulty", "standard")
-        
+
         # Check if theme changed
         selected_theme = settings.get("theme", "kingdom")
         theme_changed = False
-        
-        if hasattr(self, 'config_path') and self.config_path:
+
+        if hasattr(self, "config_path") and self.config_path:
             current_theme = "kingdom"
             if "business" in self.config_path:
                 current_theme = "business"
             elif "kingdom" in self.config_path:
                 current_theme = "kingdom"
-                
+
             if current_theme != selected_theme:
                 theme_changed = True
-                
+
         # Apply theme change if needed
         if theme_changed or not self.game_state:
             # Determine the new config path based on selected theme
             config_dir = Path(__file__).parent.parent / "config"
             new_config_path = str(config_dir / f"{selected_theme}_game.json")
-            
+
             # Save the settings temporarily
             self.page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Switching to {selected_theme.capitalize()} theme..."),
-                action="OK"
+                action="OK",
             )
             self.page.snack_bar.open = True
             self.page.update()
-            
+
             # Schedule loading the new config
-            self.page.run_async(self._load_and_switch_theme(new_config_path, player_name, difficulty))
+            self.page.run_async(
+                self._load_and_switch_theme(new_config_path, player_name, difficulty)
+            )
         else:
             # Just update existing game state
             if self.game_state:
                 self.game_state.player_name = player_name
                 self.game_state.difficulty = difficulty
-                
+
                 # Apply filter changes if needed
                 filter_type = settings.get("filter")
                 if filter_type and filter_type != "none":
                     # Store the selected filter in both app and game state
                     self.current_filter = filter_type
                     self.game_state.active_filter = filter_type
-                    
+
                     self.page.snack_bar = ft.SnackBar(
                         content=ft.Text(f"Applying {filter_type} filter..."),
-                        action="OK"
+                        action="OK",
                     )
                     self.page.snack_bar.open = True
                     self.page.update()
-                    
-                    # Trigger asset reload with filter
-                    await self._preload_assets()
+
                 else:
                     # Reset filter if none selected
                     self.current_filter = None
                     self.game_state.active_filter = None
-                    
+
             # Return to title screen
             self.page.run_async(self.navigate_to("title"))
-            
-    async def _load_and_switch_theme(self, config_path: str, player_name: str, difficulty: str) -> None:
+
+    async def _load_and_switch_theme(
+        self, config_path: str, player_name: str, difficulty: str
+    ) -> None:
         """Load a new configuration with the selected theme"""
         success = await self.load_config(config_path)
         if success and self.game_state:
             # Update player settings
             self.game_state.player_name = player_name
             self.game_state.difficulty = difficulty
-        
+
         # Navigate back to title screen
         await self.navigate_to("title")
 
@@ -308,15 +329,15 @@ class SwipeVerseApp:
         """Get current settings for the settings screen"""
         if not self.game_state:
             return {
-                "player_name": "Player", 
-                "difficulty": "standard", 
+                "player_name": "Player",
+                "difficulty": "standard",
                 "filter": self.current_filter or "none",
-                "theme": "kingdom"
+                "theme": "kingdom",
             }
 
         # Determine current theme by checking the config path if available
         current_theme = "kingdom"  # Default
-        if hasattr(self, 'config_path') and self.config_path:
+        if hasattr(self, "config_path") and self.config_path:
             if "business" in self.config_path:
                 current_theme = "business"
             elif "kingdom" in self.config_path:
@@ -326,7 +347,7 @@ class SwipeVerseApp:
             "player_name": self.game_state.player_name,
             "difficulty": self.game_state.difficulty,
             "filter": self.current_filter or "none",
-            "theme": current_theme
+            "theme": current_theme,
         }
 
     def build(self) -> ft.Container:

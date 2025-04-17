@@ -79,7 +79,7 @@ def test_game_state_initialization(sample_config):
     # Arrange
     resources = {"resource1": 50, "resource2": 50}
     card = sample_config.cards[0]
-    
+
     # Act
     game_state = GameState(
         resources=resources,
@@ -87,7 +87,7 @@ def test_game_state_initialization(sample_config):
         settings=sample_config.game_settings,
         theme=sample_config.theme,
     )
-    
+
     # Assert
     assert game_state.resources == resources
     assert game_state.current_card == card
@@ -105,14 +105,14 @@ def test_new_game(sample_config, mocker):
     """Test creating a new game state from configuration"""
     # Arrange
     mock_random = mocker.patch("random.choice", return_value=sample_config.cards[0])
-    
+
     # Act
     game_state = GameState.new_game(
         config=sample_config,
         player_name="Test Player",
         difficulty="hard",
     )
-    
+
     # Assert
     assert game_state.player_name == "Test Player"
     assert game_state.difficulty == "hard"
@@ -131,10 +131,10 @@ def test_save_game(sample_config):
     game_state.seen_cards = {"card_001", "card_002"}
     game_state.game_over = True
     game_state.end_message = "Game Over!"
-    
+
     # Act
     save_data = game_state.save_game()
-    
+
     # Assert
     assert save_data["resources"] == game_state.resources
     assert save_data["current_card_id"] == game_state.current_card.id
@@ -142,7 +142,7 @@ def test_save_game(sample_config):
     assert set(save_data["seen_cards"]) == {"card_001", "card_002"}
     assert save_data["difficulty"] == "standard"
     assert save_data["player_name"] == "Player"
-    assert save_data["game_over"] == True
+    assert save_data["game_over"] is True
     assert save_data["end_message"] == "Game Over!"
 
 
@@ -159,10 +159,10 @@ def test_load_game_card_found(sample_config):
         "game_over": False,
         "end_message": "",
     }
-    
+
     # Act
     game_state = GameState.load_game(save_data, sample_config)
-    
+
     # Assert
     assert game_state.resources == {"resource1": 25, "resource2": 75}
     assert game_state.current_card.id == "card_002"
@@ -187,13 +187,13 @@ def test_load_game_card_not_found(sample_config, mocker):
         "game_over": False,
         "end_message": "",
     }
-    
+
     # Mock random.choice to return a specific card
     mock_random = mocker.patch("random.choice", return_value=sample_config.cards[0])
-    
+
     # Act
     game_state = GameState.load_game(save_data, sample_config)
-    
+
     # Assert
     assert game_state.resources == {"resource1": 25, "resource2": 75}
     assert game_state.current_card == sample_config.cards[0]

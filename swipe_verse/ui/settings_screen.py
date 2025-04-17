@@ -27,13 +27,13 @@ class SettingsScreen:
     def build(self) -> ft.Container:
         # Responsive design adjustments
         page_width = 800  # Default width
-        if self.page and hasattr(self.page, 'width') and self.page.width is not None:
+        if self.page and hasattr(self.page, "width") and self.page.width is not None:
             page_width = self.page.width
-            
+
         is_mobile = page_width < 600
         padding_value = 20 if is_mobile else 40
         title_size = 24 if is_mobile else 32
-        
+
         # Set form width based on page width
         form_width: float = 500
         if is_mobile:
@@ -71,7 +71,7 @@ class SettingsScreen:
             ],
             value=self.settings.get("filter", "none"),
         )
-        
+
         self.theme_dropdown = ft.Dropdown(
             label="Game Theme",
             width=form_width,
@@ -83,7 +83,9 @@ class SettingsScreen:
         )
 
         # Create buttons
-        save_button = ft.ElevatedButton("Save", icon=ft.icons.SAVE, on_click=self._handle_save)
+        save_button = ft.ElevatedButton(
+            "Save", icon=ft.icons.SAVE, on_click=self._handle_save
+        )
 
         cancel_button = ft.OutlinedButton(
             "Cancel", icon=ft.icons.CANCEL, on_click=lambda _: self.on_cancel()
@@ -109,7 +111,9 @@ class SettingsScreen:
                 ft.Container(height=10),  # Spacing
                 self.filter_dropdown,
                 ft.Container(height=20),  # Spacing
-                ft.Row([cancel_button, save_button], alignment=ft.MainAxisAlignment.END),
+                ft.Row(
+                    [cancel_button, save_button], alignment=ft.MainAxisAlignment.END
+                ),
             ],
             alignment=ft.MainAxisAlignment.START,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -126,24 +130,25 @@ class SettingsScreen:
     def _handle_save(self, e: ft.ControlEvent) -> None:
         """Handle saving the settings"""
         # Validate player name
-        if (not self.player_name_field or 
-            not self.player_name_field.value or 
-            len(self.player_name_field.value.strip()) == 0):
+        if (
+            not self.player_name_field
+            or not self.player_name_field.value
+            or len(self.player_name_field.value.strip()) == 0
+        ):
             if self.player_name_field:
                 self.player_name_field.error_text = "Please enter a player name"
                 self.player_name_field.update()
             return
 
-        # Ensure all required fields are available
-        if not self.difficulty_dropdown or not self.filter_dropdown or not self.theme_dropdown:
+        # Ensure required fields are available
+        if not self.difficulty_dropdown or not self.filter_dropdown:
             return
-            
-        # Collect settings
+
+        # Collect settings (exclude theme for now)
         updated_settings = {
             "player_name": self.player_name_field.value.strip(),
             "difficulty": self.difficulty_dropdown.value,
             "filter": self.filter_dropdown.value,
-            "theme": self.theme_dropdown.value,
         }
 
         # Call save handler

@@ -21,7 +21,9 @@ class Resource(BaseModel):
         Returns:
             int: The new resource value after adjustment
         """
-        self.current_value = max(self.min_value, min(self.max_value, self.current_value + amount))
+        self.current_value = max(
+            self.min_value, min(self.max_value, self.current_value + amount)
+        )
         return self.current_value
 
     def set_value(self, value: int) -> int:
