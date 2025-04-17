@@ -41,7 +41,7 @@ def main() -> int:
             if not config_path and args.theme:
                 from pathlib import Path
 
-                config_dir = Path(__file__).parent / "config"
+                config_dir = Path(__file__).parent / "scenarios"
                 config_path = str(config_dir / f"{args.theme}_game.json")
 
             assets_path = args.assets if args.assets else None
@@ -59,12 +59,12 @@ def main() -> int:
         # Use the Terminal UI
         from swipe_verse.tui.tui_app import run_tui
 
-        # If config is not specified but theme is, use the theme config
+        # If config is not specified but theme is, use the scenario config
         config_path = args.config
         if not config_path and args.theme:
             from pathlib import Path
 
-            config_dir = Path(__file__).parent / "config"
+            config_dir = Path(__file__).parent / "scenarios"
             config_path = str(config_dir / f"{args.theme}_game.json")
 
         assets_path = args.assets if args.assets else None
@@ -74,12 +74,12 @@ def main() -> int:
         # Use the Command Line Interface
         from swipe_verse.cli.cli_app import run_cli
 
-        # If config is not specified but theme is, use the theme config
+        # If config is not specified but theme is, use the scenario config
         config_path = args.config
         if not config_path and args.theme:
             from pathlib import Path
 
-            config_dir = Path(__file__).parent / "config"
+            config_dir = Path(__file__).parent / "scenarios"
             config_path = str(config_dir / f"{args.theme}_game.json")
 
         assets_path = args.assets if args.assets else None

@@ -61,15 +61,15 @@ The game is data-driven and can be customized by editing JSON configuration file
 ```json
 {
   "game_info": {
-    "title": "Kingdom Verse",
-    "description": "Rule your medieval realm through the power of swiping",
-    "backstory": "The old king has died without an heir, and you've been unexpectedly chosen to rule...",
+    "title": "Kingdom Fate",
+    "description": "Rule your medieval kingdom through the power of swiping",
     "version": "0.1.0",
-    "author": "Your Name"
+    "author": "Swipe Fate Team",
+    "backstory": "The old king has died without an heir, and to everyone's surprise, you've been chosen to rule the kingdom..."
   },
   "theme": {
-    "name": "Default Theme",
-    "card_back": "assets/default/card_back.png",
+    "name": "Kingdom Theme",
+    "card_back": "assets/themes/kingdom/card_back.png",
     "background": null,
     "color_scheme": {
       "primary": "#4a4a4a",
@@ -77,8 +77,10 @@ The game is data-driven and can be customized by editing JSON configuration file
       "accent": "#3273dc"
     },
     "resource_icons": {
-      "resource1": "assets/default/resource_icons/resource1.png",
-      "resource2": "assets/default/resource_icons/resource2.png"
+      "treasury": "assets/themes/kingdom/resource_icons/treasury.png",
+      "population": "assets/themes/kingdom/resource_icons/population.png",
+      "military": "assets/themes/kingdom/resource_icons/military.png",
+      "church": "assets/themes/kingdom/resource_icons/church.png"
     },
     "filters": {
       "default": "none",
@@ -87,39 +89,53 @@ The game is data-driven and can be customized by editing JSON configuration file
   },
   "game_settings": {
     "initial_resources": {
-      "resource1": 50,
-      "resource2": 50
+      "treasury": 50,
+      "population": 50,
+      "military": 50,
+      "church": 50
     },
     "win_conditions": [
-      {"resource": "resource1", "min": 10, "max": 90}
+      { "resource": "treasury", "min": 10, "max": 90 },
+      { "resource": "population", "min": 10, "max": 90 },
+      { "resource": "military", "min": 10, "max": 90 },
+      { "resource": "church", "min": 10, "max": 90 }
     ],
     "difficulty_modifiers": {
       "easy": 0.7,
       "standard": 1.0,
       "hard": 1.3
+    },
+    "turn_unit": "years",
+    "stats": {
+      "popularity_formula": "treasury*0.2 + population*0.3 + military*0.2 + church*0.3"
     }
   },
   "cards": [
     {
       "id": "card_001",
-      "title": "First Decision",
-      "text": "This is the situation you're facing. What will you do?",
-      "image": "path/to/card_image.png",
+      "title": "The Harvest",
+      "text": "This year's harvest is meager. Should you raise taxes to compensate or distribute grain from the royal reserves?",
+      "image": "assets/themes/kingdom/card_fronts/card1.png",
       "choices": {
         "left": {
-          "text": "Option A",
+          "text": "Raise taxes",
           "effects": {
-            "resource1": 10,
-            "resource2": -5
+            "treasury": 15,
+            "population": -10,
+            "military": 0,
+            "church": -5
           },
           "next_card": "card_002"
         },
         "right": {
-          "text": "Option B",
+          "text": "Distribute grain",
           "effects": {
-            "resource1": -5,
-            "resource2": 10
-          }
+            "treasury": -10,
+            "population": 15,
+            "military": 5,
+            "church": 0
+          },
+          "next_card": "card_003"
         }
       }
     }
@@ -169,7 +185,8 @@ uv pre-commit run --all-files
 
 ## License
 
-MIT
+- **Code:** MIT License (see [LICENSE](LICENSE))
+- **Game Scenarios:** Creative Commons Attribution 4.0 International (CC BY 4.0) (see [scenarios/LICENSE](scenarios/LICENSE))
 
 ## Credits
 

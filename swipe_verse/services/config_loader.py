@@ -40,8 +40,8 @@ class ConfigLoader:
 
         except Exception as e:
             print(f"Error loading config: {e}")
-            # Load kingdom config as fallback
-            default_path = Path(__file__).parent.parent / "config" / "kingdom_game.json"
+            # Load kingdom config as fallback from bundled scenarios
+            default_path = Path(__file__).parent.parent / "scenarios" / "kingdom_game.json"
             default_data = self._load_from_file(default_path)
             return cast(GameConfig, GameConfig.model_validate(default_data))
 

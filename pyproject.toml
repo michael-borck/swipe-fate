@@ -84,3 +84,10 @@ testpaths = ["tests"]
 python_files = "test_*.py"
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
+
+## Include scenario JSON files and license in distributions
+[tool.hatch.build.targets.wheel]
+include = ["swipe_verse/scenarios/**"]
+
+[tool.hatch.build.targets.sdist]
+include = ["swipe_verse/scenarios/**"]
