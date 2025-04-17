@@ -1,14 +1,16 @@
 import re
-from typing import Tuple
+from typing import Dict, Any, Tuple, Optional
 
 from swipe_verse.models.config import Card, GameConfig
 from swipe_verse.models.game_state import GameState
+from swipe_verse.services.game_history import GameHistory
 
 
 class GameResult:
-    def __init__(self, game_over: bool = False, message: str = ""):
+    def __init__(self, game_over: bool = False, message: str = "", game_summary: Optional[Dict[str, Any]] = None):
         self.game_over = game_over
         self.message = message
+        self.game_summary = game_summary
 
 
 class GameLogic:
@@ -17,6 +19,8 @@ class GameLogic:
         self.config = config
         # Set up the expression evaluator for popularity formula
         self.formula_pattern = re.compile(r"(resource\d+)")
+        # Initialize game history
+        self.history = GameHistory()
 
     def process_choice(self, direction: str) -> GameResult:
         """Process player's choice (left or right)"""
@@ -44,9 +48,11 @@ class GameLogic:
         self.game_state.turn_count += 1
 
         # Check for game over conditions
-        game_over, message = self._check_game_over()
+        game_over, message, won = self._check_game_over()
         if game_over:
-            return GameResult(True, message)
+            # Record game in history
+            game_summary = self.history.record_game(self.game_state, won, message)
+            return GameResult(True, message, game_summary)
 
         # Find next card
         if choice.next_card:
@@ -100,8 +106,16 @@ class GameLogic:
         progress = min(100, int((cards_seen / total_cards) * 100))
         return progress
 
-    def _check_game_over(self) -> Tuple[bool, str]:
-        """Check if any game over conditions are met"""
+    def _check_game_over(self) -> Tuple[bool, str, bool]:
+        """
+        Check if any game over conditions are met.
+        
+        Returns:
+            Tuple of (game_over, message, won)
+            - game_over: True if game is over
+            - message: Description of end condition
+            - won: True if player won, False if lost
+        """
         # Check resource-based win/lose conditions
         for condition in self.game_state.settings.win_conditions:
             resource_id = condition.resource
@@ -110,16 +124,21 @@ class GameLogic:
 
                 # Check if resource is outside allowed range
                 if value < condition.min:
-                    return True, f"Game over: {resource_id} too low!"
+                    return True, f"Game over: {resource_id} too low!", False
                 if value > condition.max:
-                    return True, f"Game over: {resource_id} too high!"
+                    return True, f"Game over: {resource_id} too high!", False
+
+        # Check victory conditions
+        # For now, consider it a win if player survives for 20+ turns
+        if self.game_state.turn_count >= 20:
+            return True, f"Victory! You've ruled successfully for {self.game_state.turn_count} {self.game_state.settings.turn_unit}!", True
 
         # Could add other game over conditions here
         # - Turn limit reached
         # - Special ending card
         # - Achievement of specific goal
 
-        return False, ""
+        return False, "", False
 
     def _set_next_card(self, card_id: str) -> bool:
         """Set the specified card as the next one to display"""
@@ -164,3 +183,15 @@ class GameLogic:
 
         # For now, just avoid showing recently seen cards
         return card.id not in self.game_state.seen_cards
+        
+    def get_achievements(self) -> list:
+        """Get achievements list with unlock status."""
+        return self.history.get_achievements()
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get gameplay statistics."""
+        return self.history.get_statistics()
+    
+    def get_recent_games(self, limit: int = 5) -> list:
+        """Get most recent game records."""
+        return self.history.get_recent_games(limit)

@@ -6,6 +6,7 @@ from swipe_verse.models.game_state import GameState
 from swipe_verse.services.game_logic import GameLogic
 from swipe_verse.ui.components.card_display import CardDisplay
 from swipe_verse.ui.components.resource_bar import ResourceBar
+from swipe_verse.ui.achievements_screen import AchievementsScreen
 
 
 # Note: For Flet 0.27.x compatibility
@@ -105,6 +106,44 @@ class GameScreen:
             ],
         )
 
+        # Create menu buttons
+        menu_buttons = ft.Row(
+            [
+                ft.ElevatedButton(
+                    "Achievements", 
+                    on_click=lambda _: self._show_achievements(),
+                    icon=ft.icons.EMOJI_EVENTS,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.PURPLE_500,
+                    ),
+                ),
+                ft.ElevatedButton(
+                    "New Game", 
+                    on_click=lambda _: self.on_new_game(),
+                    icon=ft.icons.REPLAY,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.BLUE_500,
+                    ),
+                ),
+                ft.ElevatedButton(
+                    "Main Menu", 
+                    on_click=lambda _: self.on_main_menu(),
+                    icon=ft.icons.HOME,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                        color=ft.colors.WHITE,
+                        bgcolor=ft.colors.BLUE_700,
+                    ),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10,
+        )
+        
         # Stack all components in the required order
         main_column = ft.Column(
             controls=[
@@ -114,6 +153,8 @@ class GameScreen:
                 card_title,
                 game_stats,
                 decision_buttons,
+                ft.Container(height=10),  # Spacing
+                menu_buttons,
             ],
             alignment=ft.MainAxisAlignment.START,
             spacing=10,
@@ -229,10 +270,10 @@ class GameScreen:
 
         # Check for game over condition
         if result.game_over:
-            self._show_game_over_dialog(result.message)
+            self._show_game_over_dialog(result.message, result.game_summary)
 
-    def _show_game_over_dialog(self, message: str) -> None:
-        """Show game over dialog with the result message"""
+    def _show_game_over_dialog(self, message: str, game_summary: Optional[Dict[str, Any]] = None) -> None:
+        """Show game over dialog with the result message and achievements"""
 
         def start_new_game(_: ft.ControlEvent) -> None:
             if self.page:
@@ -247,21 +288,46 @@ class GameScreen:
                 self.page.update()
             if self.on_main_menu:
                 self.on_main_menu()
+                
+        def view_achievements(_: ft.ControlEvent) -> None:
+            if self.page:
+                self.page.dialog.open = False
+                self.page.update()
+                self._show_achievements()
 
+        # Create content with basic game info
+        content_controls = [
+            ft.Text(message, size=18, weight=ft.FontWeight.BOLD),
+            ft.Text(
+                f"You lasted {self.game_state.turn_count} "
+                f"{self.game_state.settings.turn_unit}."
+            ),
+            ft.Text(f"Popularity: {self.game_logic.calculate_popularity()}%"),
+            ft.Divider(height=1, color=ft.colors.BLACK26),
+        ]
+        
+        # Add achievement notifications if any were unlocked
+        if game_summary and "new_achievements" in game_summary and game_summary["new_achievements"]:
+            content_controls.append(
+                ft.Text("Achievements Unlocked!", size=16, weight=ft.FontWeight.BOLD, color=ft.colors.AMBER)
+            )
+            
+            for achievement in game_summary["new_achievements"]:
+                achievement_row = ft.Row([
+                    ft.Text(achievement["icon"], size=20),
+                    ft.Text(achievement["name"], size=14, weight=ft.FontWeight.BOLD),
+                ])
+                content_controls.append(achievement_row)
+                content_controls.append(ft.Text(achievement["description"], size=12, color=ft.colors.BLACK54))
+            
+            content_controls.append(ft.Divider(height=1, color=ft.colors.BLACK26))
+        
         # Create the dialog
         dialog = ft.AlertDialog(
             title=ft.Text("Game Over"),
-            content=ft.Column(
-                [
-                    ft.Text(message),
-                    ft.Text(
-                        f"You lasted {self.game_state.turn_count} "
-                        f"{self.game_state.settings.turn_unit}."
-                    ),
-                    ft.Text(f"Popularity: {self.game_logic.calculate_popularity()}%"),
-                ]
-            ),
+            content=ft.Column(content_controls, tight=True, spacing=10),
             actions=[
+                ft.ElevatedButton("View Achievements", on_click=view_achievements),
                 ft.ElevatedButton("New Game", on_click=start_new_game),
                 ft.OutlinedButton("Main Menu", on_click=go_to_title),
             ],
@@ -277,4 +343,30 @@ class GameScreen:
     def update(self) -> None:
         """Update the game screen"""
         if self.page:
+            self.page.update()
+            
+    def _show_achievements(self) -> None:
+        """Show achievements and statistics screen"""
+        if self.page:
+            # Create the achievements screen
+            achievements_screen = AchievementsScreen(
+                game_logic=self.game_logic,
+                on_back=lambda: self._return_from_achievements(),
+            )
+            
+            # Add page reference to screen
+            achievements_screen.page = self.page
+            
+            # Save current screen
+            self._saved_screen = self.page.controls[0]
+            
+            # Replace with achievements screen
+            self.page.controls[0] = achievements_screen.build()
+            self.page.update()
+            
+    def _return_from_achievements(self) -> None:
+        """Return from achievements screen to game screen"""
+        if self.page and hasattr(self, "_saved_screen"):
+            # Restore game screen
+            self.page.controls[0] = self._saved_screen
             self.page.update()
