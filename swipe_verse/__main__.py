@@ -17,10 +17,10 @@ def main() -> int:
         help="Game interface mode: UI (graphical), TUI (terminal), CLI (command line)",
     )
     parser.add_argument(
-        "--theme",
+        "--game",
         choices=["kingdom", "business", "science", "space", "tutorial"],
         default="kingdom",
-        help="Game theme to launch with",
+        help="Game scenario to launch with",
     )
     parser.add_argument("--assets", type=str, help="Path to custom assets directory")
     parser.add_argument(
@@ -38,11 +38,11 @@ def main() -> int:
             # Initialize settings
             # If config is not specified but theme is, use the theme config
             config_path = args.config
-            if not config_path and args.theme:
+            if not config_path and args.game:
                 from pathlib import Path
 
                 config_dir = Path(__file__).parent / "scenarios"
-                config_path = str(config_dir / f"{args.theme}_game.json")
+                config_path = str(config_dir / f"{args.game}_game.json")
 
             assets_path = args.assets if args.assets else None
 
@@ -61,11 +61,11 @@ def main() -> int:
 
         # If config is not specified but theme is, use the scenario config
         config_path = args.config
-        if not config_path and args.theme:
+        if not config_path and args.game:
             from pathlib import Path
 
             config_dir = Path(__file__).parent / "scenarios"
-            config_path = str(config_dir / f"{args.theme}_game.json")
+            config_path = str(config_dir / f"{args.game}_game.json")
 
         assets_path = args.assets if args.assets else None
         run_tui(config_path, assets_path)
@@ -76,11 +76,11 @@ def main() -> int:
 
         # If config is not specified but theme is, use the scenario config
         config_path = args.config
-        if not config_path and args.theme:
+        if not config_path and args.game:
             from pathlib import Path
 
             config_dir = Path(__file__).parent / "scenarios"
-            config_path = str(config_dir / f"{args.theme}_game.json")
+            config_path = str(config_dir / f"{args.game}_game.json")
 
         assets_path = args.assets if args.assets else None
         run_cli(config_path, assets_path)

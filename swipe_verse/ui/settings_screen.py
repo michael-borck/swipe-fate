@@ -73,13 +73,13 @@ class SettingsScreen:
         )
 
         self.theme_dropdown = ft.Dropdown(
-            label="Game Theme",
+            label="Game",
             width=form_width,
             options=[
                 ft.dropdown.Option("kingdom", "Kingdom"),
                 ft.dropdown.Option("business", "Corporate"),
             ],
-            value=self.settings.get("theme", "kingdom"),
+            value=self.settings.get("game", "kingdom"),
         )
 
         # Create buttons
@@ -141,15 +141,20 @@ class SettingsScreen:
             return
 
         # Ensure required fields are available
-        if not self.difficulty_dropdown or not self.filter_dropdown:
+        difficulty_dropdown = self.difficulty_dropdown
+        filter_dropdown = self.filter_dropdown
+        theme_dropdown = self.theme_dropdown
+        if difficulty_dropdown is None or filter_dropdown is None or theme_dropdown is None:
             return
 
-        # Collect settings (exclude theme for now)
+        # Collect settings, including selected game
         updated_settings = {
             "player_name": self.player_name_field.value.strip(),
-            "difficulty": self.difficulty_dropdown.value,
-            "filter": self.filter_dropdown.value,
+            "difficulty": difficulty_dropdown.value,
+            "filter": filter_dropdown.value,
         }
+        # Include game/scenario selection
+        updated_settings["game"] = theme_dropdown.value
 
         # Call save handler
         self.on_save(updated_settings)

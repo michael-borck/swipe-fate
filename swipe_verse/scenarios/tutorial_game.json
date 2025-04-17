@@ -4,6 +4,8 @@
     "description": "Learn how to play Swipe Verse with this interactive tutorial",
     "version": "0.1.0",
     "author": "Swipe Verse Team",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "backstory": "Welcome to Swipe Verse, a game about choices and consequences across multiple realities!\n\nIn this multiverse card game, you'll navigate through different themed worlds, each presenting unique challenges and opportunities. Whether you're ruling a medieval kingdom, running a modern corporation, or exploring the far reaches of space, your decisions will shape your destiny.\n\nEvery swipe matters as you balance critical resources and navigate complex situations. Will you make choices for short-term gain, or focus on long-term strategy? The fate of your world is literally in your hands - or rather, at your fingertips.\n\nThis tutorial will guide you through the basic mechanics and help you understand how to play effectively. Good luck, and may your choices lead to prosperity rather than peril!"
   },
   "theme": {

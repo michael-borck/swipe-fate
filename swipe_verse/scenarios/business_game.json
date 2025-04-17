@@ -3,7 +3,9 @@
     "title": "Corporate Fate",
     "description": "Lead your company to success through strategic decisions",
     "version": "0.1.0",
-    "author": "Swipe Fate Team",
+    "author": "Swipe Verse Team",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "backstory": "Congratulations on your appointment as the new CEO of Horizon Enterprises!\n\nAfter the sudden resignation of your predecessor amidst rumors of financial impropriety, the board has turned to you - a rising star from within the company - to steady the ship and chart a course for future success.\n\nYou inherit a company at a crossroads. While Horizon has solid foundations, your competitors are innovating faster. Your finances need careful management as investors grow increasingly impatient for returns. Your employees are talented but overworked, and your company's reputation has taken some hits in recent quarters.\n\nThe modern business landscape is unforgiving. Every decision you make will impact your company's finances, employee satisfaction, innovation capabilities, and market reputation. Will you prioritize short-term gains to please shareholders, or invest in long-term innovation? Will you focus on employee well-being, or push them harder to meet aggressive targets?\n\nAs competitors circle and market conditions shift unpredictably, you'll need to balance competing priorities with limited resources. The board is watching your every move, and your time to prove yourself is limited.\n\nThe future of Horizon Enterprises is now in your hands. What kind of leader will you be?"
   },
   "theme": {

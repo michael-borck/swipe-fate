@@ -252,29 +252,29 @@ class SwipeVerseApp:
         player_name = settings.get("player_name", "Player")
         difficulty = settings.get("difficulty", "standard")
 
-        # Check if theme changed
-        selected_theme = settings.get("theme", "kingdom")
-        theme_changed = False
+        # Check if game scenario changed
+        selected_game = settings.get("game", "kingdom")
+        game_changed = False
 
         if hasattr(self, "config_path") and self.config_path:
-            current_theme = "kingdom"
+            current_game = "kingdom"
             if "business" in self.config_path:
-                current_theme = "business"
+                current_game = "business"
             elif "kingdom" in self.config_path:
-                current_theme = "kingdom"
+                current_game = "kingdom"
 
-            if current_theme != selected_theme:
-                theme_changed = True
+            if current_game != selected_game:
+                game_changed = True
 
         # Apply theme change if needed
-        if theme_changed or not self.game_state:
+        if game_changed or not self.game_state:
             # Determine the new config path based on selected theme
             config_dir = Path(__file__).parent.parent / "config"
-            new_config_path = str(config_dir / f"{selected_theme}_game.json")
+            new_config_path = str(config_dir / f"{selected_game}_game.json")
 
             # Save the settings temporarily
             self.page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Switching to {selected_theme.capitalize()} theme..."),
+                content=ft.Text(f"Switching to {selected_game.capitalize()} game..."),
                 action="OK",
             )
             self.page.snack_bar.open = True
@@ -332,22 +332,22 @@ class SwipeVerseApp:
                 "player_name": "Player",
                 "difficulty": "standard",
                 "filter": self.current_filter or "none",
-                "theme": "kingdom",
+                "game": "kingdom",
             }
 
-        # Determine current theme by checking the config path if available
-        current_theme = "kingdom"  # Default
+        # Determine current game scenario by inspecting the config path
+        current_game = "kingdom"  # Default
         if hasattr(self, "config_path") and self.config_path:
             if "business" in self.config_path:
-                current_theme = "business"
+                current_game = "business"
             elif "kingdom" in self.config_path:
-                current_theme = "kingdom"
+                current_game = "kingdom"
 
         return {
             "player_name": self.game_state.player_name,
             "difficulty": self.game_state.difficulty,
             "filter": self.current_filter or "none",
-            "theme": current_theme,
+            "game": current_game,
         }
 
     def build(self) -> ft.Container:

@@ -420,7 +420,7 @@ class AchievementsScreen:
             ),
         )
 
-    def _get_resource_color(self, resource: str) -> str:
+    def _get_resource_color(self, resource: str) -> Any:
         """Get a color for a specific resource."""
         colors = {
             "treasury": ft.colors.AMBER,

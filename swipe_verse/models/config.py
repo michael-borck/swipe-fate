@@ -63,6 +63,15 @@ class GameInfo(BaseModel):
     version: str
     author: str
     backstory: Optional[str] = None
+    # Licensing information for the scenario
+    license: Optional[str] = Field(
+        default=None,
+        description="License name for the scenario, e.g., CC BY 4.0"
+    )
+    license_url: Optional[HttpUrl] = Field(
+        default=None,
+        description="URL to the full license text"
+    )
 
 
 class GameConfig(BaseModel):

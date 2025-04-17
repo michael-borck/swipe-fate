@@ -3,12 +3,14 @@
     "title": "Kingdom Fate",
     "description": "Rule your medieval kingdom through the power of swiping",
     "version": "0.1.0",
-    "author": "Swipe Fate Team",
+    "author": "Swipe Verse Team",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "backstory": "The old king has died without an heir, and to everyone's surprise, you've been chosen to rule the kingdom.\n\nAs the new monarch of a troubled realm, you face challenges from all sides. The royal treasury is depleted after years of extravagance, the common folk grow restless with hunger, the military demands more resources for defense, and the church seeks to extend its influence over the throne.\n\nYour advisors are divided in their loyalties, and neighboring kingdoms watch with interest - some hoping for alliance, others waiting for weakness to exploit.\n\nEvery decision you make will affect the balance of power. Will you prioritize the treasury by raising taxes, even if it means the people suffer? Will you favor the military to secure your borders, or the church to maintain social order?\n\nThe choices are yours to make. The fate of the kingdom rests in your hands. How long will your reign last, and what legacy will you leave behind?"
   },
   "theme": {
     "name": "Kingdom Theme",
-    "card_back": "assets/themes/kingdom/card_back.png",
+    "card_back": "assets/themes/medieval/card_back.png",
     "background": null,
     "color_scheme": {
       "primary": "#4a4a4a",
@@ -16,10 +18,10 @@
       "accent": "#3273dc"
     },
     "resource_icons": {
-      "treasury": "assets/themes/kingdom/resource_icons/resource1.png",
-      "population": "assets/themes/kingdom/resource_icons/resource2.png",
-      "military": "assets/themes/kingdom/resource_icons/resource3.png",
-      "church": "assets/themes/kingdom/resource_icons/resource4.png"
+      "treasury": "assets/themes/medieval/resource_icons/resource1.png",
+      "population": "assets/themes/medieval/resource_icons/resource2.png",
+      "military": "assets/themes/medieval/resource_icons/resource3.png",
+      "church": "assets/themes/medieval/resource_icons/resource4.png"
     },
     "filters": {
       "default": "none",
@@ -54,7 +56,7 @@
       "id": "card_001",
       "title": "The Harvest",
       "text": "This year's harvest is meager. Should you raise taxes to compensate or distribute grain from the royal reserves?",
-      "image": "assets/themes/kingdom/card_fronts/card1.png",
+      "image": "assets/themes/medieval/card_fronts/card1.png",
       "choices": {
         "left": {
           "text": "Raise taxes",
@@ -82,7 +84,7 @@
       "id": "card_002",
       "title": "Foreign Envoy",
       "text": "A diplomat from a neighboring kingdom requests an audience. They propose a trade agreement that would benefit merchants but might upset your military.",
-      "image": "assets/themes/kingdom/card_fronts/card2.png",
+      "image": "assets/themes/medieval/card_fronts/card2.png",
       "choices": {
         "left": {
           "text": "Reject the proposal",
@@ -108,7 +110,7 @@
       "id": "card_003",
       "title": "Religious Festival",
       "text": "The high priest wants to organize an elaborate religious festival. It would boost morale but cost a significant amount from the treasury.",
-      "image": "assets/themes/kingdom/card_fronts/card3.png",
+      "image": "assets/themes/medieval/card_fronts/card3.png",
       "choices": {
         "left": {
           "text": "Approve the festival",
@@ -134,7 +136,7 @@
       "id": "card_004",
       "title": "Military Training",
       "text": "Your general proposes mandatory military training for all young men. This would strengthen your army but disrupt civilian life.",
-      "image": "assets/themes/kingdom/card_fronts/card4.png",
+      "image": "assets/themes/medieval/card_fronts/card4.png",
       "choices": {
         "left": {
           "text": "Implement training",
