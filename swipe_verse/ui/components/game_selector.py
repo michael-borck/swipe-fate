@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union, Coroutine
 
@@ -230,6 +231,9 @@ class GameSelector(ft.Row):
                     self.game_cards.append(game_card)
             except Exception as e:
                 print(f"Error loading game {game_file}: {e}")
+                
+        # Add Multi-Verse Portal placeholder card
+        self._add_multiverse_card()
         
         # Update visibility of scroll buttons
         self._update_button_visibility()
@@ -283,3 +287,202 @@ class GameSelector(ft.Row):
             # Update the buttons
             self.left_button.update()
             self.right_button.update()
+            
+    def _add_multiverse_card(self):
+        """Add a placeholder for the Multi-Verse Portal."""
+        if not isinstance(self.scroll_container.content, ft.Row):
+            return
+            
+        # Create a pulse animation for the portal card
+        def _pulse_animation(e):
+            # Skip animation if no longer visible
+            if not portal_card.visible:
+                return
+                
+            # Animate glow effect
+            portal_card.shadow = ft.BoxShadow(
+                spread_radius=2,
+                blur_radius=15,
+                color=ft.colors.with_opacity(0.6, ft.colors.PURPLE),
+            )
+            portal_card.update()
+            
+            # Schedule return to normal state
+            e.page.run_async(self._reset_portal_animation(portal_card, e.page))
+        
+        # Default card back path (using tutorial card back as a placeholder)
+        card_back_path = "assets/default/card_back.png"
+        
+        # Create visual for the portal
+        portal_image = ft.Stack(
+            [
+                # Background image
+                ft.Image(
+                    src=card_back_path,
+                    width=220,
+                    height=230,
+                    fit=ft.ImageFit.CONTAIN,
+                    border_radius=ft.border_radius.all(10),
+                ),
+                # Portal overlay
+                ft.Container(
+                    content=ft.Text(
+                        "🌀",  # Portal emoji
+                        size=100,
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.colors.with_opacity(0.9, ft.colors.WHITE),
+                    ),
+                    width=220,
+                    height=230,
+                    alignment=ft.alignment.center,
+                ),
+                # "Coming Soon" ribbon
+                ft.Container(
+                    content=ft.Text(
+                        "COMING SOON",
+                        size=14,
+                        weight=ft.FontWeight.BOLD,
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.colors.WHITE,
+                    ),
+                    width=220,
+                    height=30,
+                    alignment=ft.alignment.center,
+                    bgcolor=ft.colors.with_opacity(0.7, ft.colors.BLACK),
+                    border_radius=ft.border_radius.only(bottom_left=10, bottom_right=10),
+                    padding=ft.padding.only(top=5),
+                    bottom=0,
+                ),
+            ],
+            width=220,
+            height=230,
+        )
+        
+        # Resource preview icons for different worlds
+        resource_row = ft.Row(
+            controls=[
+                ft.Container(
+                    content=ft.Text("K", size=16, weight=ft.FontWeight.BOLD, color=ft.colors.ORANGE),
+                    width=30,
+                    height=30,
+                    border_radius=ft.border_radius.all(15),
+                    bgcolor=ft.colors.with_opacity(0.2, ft.colors.WHITE),
+                    alignment=ft.alignment.center,
+                ),
+                ft.Container(
+                    content=ft.Text("B", size=16, weight=ft.FontWeight.BOLD, color=ft.colors.BLUE),
+                    width=30,
+                    height=30,
+                    border_radius=ft.border_radius.all(15),
+                    bgcolor=ft.colors.with_opacity(0.2, ft.colors.WHITE),
+                    alignment=ft.alignment.center,
+                ),
+                ft.Container(
+                    content=ft.Text("S", size=16, weight=ft.FontWeight.BOLD, color=ft.colors.GREEN),
+                    width=30,
+                    height=30,
+                    border_radius=ft.border_radius.all(15),
+                    bgcolor=ft.colors.with_opacity(0.2, ft.colors.WHITE),
+                    alignment=ft.alignment.center,
+                ),
+                ft.Container(
+                    content=ft.Text("?", size=16, weight=ft.FontWeight.BOLD, color=ft.colors.YELLOW),
+                    width=30,
+                    height=30,
+                    border_radius=ft.border_radius.all(15),
+                    bgcolor=ft.colors.with_opacity(0.2, ft.colors.WHITE),
+                    alignment=ft.alignment.center,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=5,
+        )
+        
+        # Build the card content
+        card_content = ft.Column(
+            controls=[
+                ft.Container(
+                    content=ft.Text(
+                        "Multi-Verse Portal",
+                        size=20,
+                        weight=ft.FontWeight.BOLD,
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.colors.WHITE,
+                    ),
+                    margin=ft.margin.only(bottom=5),
+                ),
+                portal_image,
+                ft.Container(
+                    content=ft.Text(
+                        "Travel between multiple realities in a single game",
+                        size=12,
+                        italic=True,
+                        text_align=ft.TextAlign.CENTER,
+                        color=ft.colors.WHITE,
+                    ),
+                    margin=ft.margin.symmetric(vertical=5),
+                ),
+                ft.Container(
+                    content=ft.Text(
+                        "Experience the true power of the Swipe Verse as you navigate between worlds...",
+                        size=11,
+                        color=ft.colors.WHITE70,
+                        text_align=ft.TextAlign.CENTER,
+                    ),
+                    margin=ft.margin.only(bottom=5),
+                ),
+                resource_row,
+                ft.Container(height=10),  # Spacing
+                ft.ElevatedButton(
+                    content=ft.Text("Coming Soon", color=ft.colors.WHITE70),
+                    width=220 * 0.7,
+                    style=ft.ButtonStyle(
+                        shape=ft.RoundedRectangleBorder(radius=8),
+                        color=ft.colors.WHITE70,
+                        bgcolor=ft.colors.with_opacity(0.3, ft.colors.GREY),
+                    ),
+                    disabled=True,
+                ),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.START,
+            spacing=5,
+        )
+        
+        # Create the card container with special styling
+        portal_card = ft.Container(
+            content=card_content,
+            width=280,
+            height=380,
+            border_radius=ft.border_radius.all(10),
+            bgcolor=ft.colors.with_opacity(0.2, ft.colors.PURPLE),
+            border=ft.border.all(1, ft.colors.with_opacity(0.5, ft.colors.PURPLE)),
+            padding=ft.padding.all(10),
+            margin=ft.margin.all(10),
+            shadow=ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=10,
+                color=ft.colors.with_opacity(0.3, ft.colors.PURPLE),
+                offset=ft.Offset(0, 0),
+            ),
+            on_hover=_pulse_animation,
+        )
+        
+        # Add to the container
+        self.scroll_container.content.controls.append(portal_card)
+        self.game_cards.append(portal_card)
+        
+    async def _reset_portal_animation(self, portal_card, page):
+        """Reset the portal glow animation after a delay."""
+        # Add a small delay
+        await asyncio.sleep(1.5)
+        
+        # Reset shadow
+        if portal_card.visible:
+            portal_card.shadow = ft.BoxShadow(
+                spread_radius=1,
+                blur_radius=10,
+                color=ft.colors.with_opacity(0.3, ft.colors.PURPLE),
+                offset=ft.Offset(0, 0),
+            )
+            portal_card.update()
