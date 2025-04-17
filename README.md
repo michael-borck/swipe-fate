@@ -41,11 +41,11 @@ swipe-verse --mode tui
 # Run with custom assets
 swipe-verse --assets path/to/assets/folder
 
-# Run with a specific theme
-swipe-verse --theme business  # or kingdom, tutorial, etc.
+# Run with a specific game
+swipe-verse --games business  # or kingdom, tutorial, etc.
 
-# Start with the tutorial
-swipe-verse --theme tutorial
+# Start with the tutorial game
+swipe-verse --games tutorial
 ```
 
 ## Game Configuration
@@ -65,6 +65,8 @@ The game is data-driven and can be customized by editing JSON configuration file
     "description": "Rule your medieval kingdom through the power of swiping",
     "version": "0.1.0",
     "author": "Swipe Fate Team",
+    "license": "CC BY-SA 4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
     "backstory": "The old king has died without an heir, and to everyone's surprise, you've been chosen to rule the kingdom..."
   },
   "theme": {
