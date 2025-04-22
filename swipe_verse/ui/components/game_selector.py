@@ -204,6 +204,8 @@ class GameSelector(ft.Row):
             alignment=ft.MainAxisAlignment.CENTER,
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         )
+        # Initialize scroll offset tracking
+        self._scroll_offset: float = 0
 
     async def load_games(self, page: Optional[ft.Page] = None) -> None:
         """Load and display available games."""
@@ -254,39 +256,51 @@ class GameSelector(ft.Row):
     def _scroll_left(self, _event: Any) -> None:
         """Scroll the carousel left."""
         if isinstance(self.scroll_container.content, ft.Row):
-            current = self.scroll_container.content.scroll_left or 0
-            new_position = max(0, current - 300)
+            # Scroll left by fixed amount and update offset
+            new_position = max(0, self._scroll_offset - 300)
             self.scroll_container.content.scroll_to(
                 offset=new_position,
                 duration=300,
                 curve=ft.AnimationCurve.EASE_IN_OUT,
             )
+            self._scroll_offset = new_position
             self._update_button_visibility()
 
     def _scroll_right(self, _event: Any) -> None:
         """Scroll the carousel right."""
         if isinstance(self.scroll_container.content, ft.Row):
-            current = self.scroll_container.content.scroll_left or 0
             # Approximate max scroll position
             max_scroll = max(
                 0, len(self.game_cards) * 300 - self.scroll_container.width
             )
-            new_position = min(max_scroll, current + 300)
+            # Scroll right by fixed amount and update offset
+            new_position = min(max_scroll, self._scroll_offset + 300)
             self.scroll_container.content.scroll_to(
                 offset=new_position,
                 duration=300,
                 curve=ft.AnimationCurve.EASE_IN_OUT,
             )
+            self._scroll_offset = new_position
             self._update_button_visibility()
 
     def _handle_scroll(self, e: Any) -> None:
         """Handle manual scrolling events."""
+        # Update scroll offset from event and refresh button visibility
+        try:
+            self._scroll_offset = e.pixels
+        except Exception:
+            self._scroll_offset = 0
         self._update_button_visibility()
 
     def _update_button_visibility(self) -> None:
         """Update the visibility of scroll buttons based on scroll position."""
         if isinstance(self.scroll_container.content, ft.Row):
-            current = self.scroll_container.content.scroll_left or 0
+            # Determine current scroll position: prefer content.scroll_left if available
+            content = self.scroll_container.content
+            if hasattr(content, "scroll_left"):
+                current = content.scroll_left or 0
+            else:
+                current = self._scroll_offset
             max_scroll = max(
                 0, len(self.game_cards) * 300 - self.scroll_container.width
             )

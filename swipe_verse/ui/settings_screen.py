@@ -143,18 +143,15 @@ class SettingsScreen:
         # Ensure required fields are available
         difficulty_dropdown = self.difficulty_dropdown
         filter_dropdown = self.filter_dropdown
-        theme_dropdown = self.theme_dropdown
-        if difficulty_dropdown is None or filter_dropdown is None or theme_dropdown is None:
+        if difficulty_dropdown is None or filter_dropdown is None:
             return
 
-        # Collect settings, including selected game
+        # Collect settings
         updated_settings = {
             "player_name": self.player_name_field.value.strip(),
             "difficulty": difficulty_dropdown.value,
             "filter": filter_dropdown.value,
         }
-        # Include game/scenario selection
-        updated_settings["game"] = theme_dropdown.value
 
         # Call save handler
         self.on_save(updated_settings)

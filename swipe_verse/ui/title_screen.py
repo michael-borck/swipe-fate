@@ -145,18 +145,16 @@ class TitleScreen:
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
 
-        # Main container with background
+        # Main container with background gradient
         return ft.Container(
             content=content,
             expand=True,
             alignment=ft.alignment.center,
             padding=padding_value,
-            decoration=ft.BoxDecoration(
-                gradient=ft.LinearGradient(
-                    begin=ft.alignment.top_center,
-                    end=ft.alignment.bottom_center,
-                    colors=[ft.colors.BLUE_900, ft.colors.INDIGO_900],
-                )
+            gradient=ft.LinearGradient(
+                begin=ft.alignment.top_center,
+                end=ft.alignment.bottom_center,
+                colors=[ft.colors.BLUE_900, ft.colors.INDIGO_900],
             ),
         )
 

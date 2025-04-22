@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "swipe-verse"
-version = "0.1.1"
+version = "0.1.10"
 description = "A multiverse card-based decision game with themes across different realities"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-swipe-verse = "swipe_verse.__main__:main"
+swipe-verse = "swipe_verse.main:main"
 
 [tool.ruff]
 line-length = 100
@@ -85,9 +85,9 @@ python_files = "test_*.py"
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
 
-## Include scenario JSON files and license in distributions
+## Include package files and scenario JSON files in distributions
 [tool.hatch.build.targets.wheel]
-include = ["swipe_verse/scenarios/**"]
+include = ["swipe_verse/**"]
 
 [tool.hatch.build.targets.sdist]
-include = ["swipe_verse/scenarios/**"]
+include = ["swipe_verse/**"]
