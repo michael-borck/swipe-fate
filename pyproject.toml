@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-swipe-verse = "swipe_verse.main:main"
+swipe-verse = "swipe_verse.__main__:main"
 
 [tool.ruff]
 line-length = 100
