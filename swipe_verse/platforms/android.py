@@ -1,9 +1,7 @@
 """Android platform for SwipeVerse."""
 
-import os
-import shutil
 from pathlib import Path
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Union
 
 
 def prepare_android_build(config: Dict[str, Any], output_dir: Union[str, Path]) -> Path:

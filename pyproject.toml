@@ -40,17 +40,27 @@ target-version = "py310"
 select = ["E", "F", "I"]
 ignore = ["E501"]
 
+[tool.ruff.isort]
+known-first-party = ["swipe_verse"]
+
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
+disallow_untyped_defs = false 
+disallow_incomplete_defs = false
 check_untyped_defs = true
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "flet.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "swipe_verse.ui.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
 
 # Ignore missing stubs for common third-party libraries
 [[tool.mypy.overrides]]

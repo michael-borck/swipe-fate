@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 """Cross-platform launcher for SwipeVerse."""
 
-import os
-import sys
-import platform
-import subprocess
-import importlib.util
-from pathlib import Path
 import argparse
+import os
+import platform
+from pathlib import Path
+from typing import Optional
 
 
 def launch_platform(
-    target_platform: str = None,
-    game: str = None,
+    target_platform: Optional[str] = None,
+    game: Optional[str] = None,
     debug: bool = False,
     port: int = 8550,
     host: str = "127.0.0.1",
-    build_dir: Path = None
+    build_dir: Optional[Path] = None
 ) -> None:
     """Launch the application on the specified platform.
     
@@ -29,7 +27,7 @@ def launch_platform(
         build_dir: Directory to output build files (optional)
     """
     # Get the SwipeVerse package directory
-    package_dir = Path(__file__).parent
+    Path(__file__).parent
     
     # Initialize app configuration
     from swipe_verse.main import initialize_app
