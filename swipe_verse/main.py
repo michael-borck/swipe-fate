@@ -58,18 +58,38 @@ def initialize_app(
         print(f"[DEBUG] scenarios_dir: {scenarios_dir}")
         print(f"[DEBUG] game_theme: {game_theme}")
         print(f"[DEBUG] version: {version}")
+        print(f"[DEBUG] __file__: {__file__}")
+        print(f"[DEBUG] Package root: {Path(__file__).parent}")
         
         # Check if directories exist
         print(f"[DEBUG] assets_dir exists: {Path(assets_dir).exists()}")
         print(f"[DEBUG] scenarios_dir exists: {Path(scenarios_dir).exists()}")
         
-        # Test access to a sample file
+        # List what's in the assets directory
         try:
-            sample_path = Path(assets_dir) / "default" / "card_back.png"
-            print(f"[DEBUG] Sample file path: {sample_path}")
-            print(f"[DEBUG] Sample file exists: {sample_path.exists()}")
+            print("[DEBUG] Assets directory contents:")
+            for path in Path(assets_dir).glob("**/*"):
+                if path.is_file():
+                    print(f"[DEBUG]   - {path}")
         except Exception as e:
-            print(f"[DEBUG] Error checking sample file: {e}")
+            print(f"[DEBUG] Error listing assets: {e}")
+            
+        # Try multiple path formats for a test image
+        print("[DEBUG] Testing image path resolution:")
+        sample_paths = [
+            Path(assets_dir) / "default" / "card_back.png",
+            Path(assets_dir) / "default/card_back.png",
+            Path(__file__).parent / "assets" / "default" / "card_back.png",
+            Path("swipe_verse") / "assets" / "default" / "card_back.png",
+            Path("/swipe_verse/assets/default/card_back.png"),
+        ]
+        
+        for path in sample_paths:
+            try:
+                print(f"[DEBUG]   Path: {path}")
+                print(f"[DEBUG]   Exists: {path.exists()}")
+            except Exception as e:
+                print(f"[DEBUG]   Error checking {path}: {e}")
     
     return {
         "game_theme": game_theme,
@@ -344,9 +364,10 @@ def run_app(
                     controls=[
                         ft.Container(
                             content=ft.Stack([
-                                # Base icon - construct full path for each icon
+                                # Base icon - construct proper path for each icon
                                 ft.Image(
-                                    src=resource_icons.get(name, ""),
+                                    # Try multiple path patterns to handle different installation scenarios
+                                    src=f"/swipe_verse/{resource_icons.get(name, '')}",
                                     width=50,
                                     height=50,
                                     fit=ft.ImageFit.CONTAIN,
@@ -389,16 +410,24 @@ def run_app(
                 # Create the card display
                 card_image_path = current_card.get("image", "")
                 
-                # Use the path directly from JSON, Flet will handle asset resolution
-                full_card_image_path = card_image_path
+                # Construct a path that will work in the installed package
+                full_card_image_path = f"/swipe_verse/{card_image_path}" if card_image_path else ""
                 
                 # Debug image loading
                 debug_mode = config.get("debug", False) if config else False
                 if debug_mode:
-                    print(f"Card image path: {card_image_path}")
-                    print(f"Used for image: {full_card_image_path}")
+                    print(f"[DEBUG] Card image from JSON: {card_image_path}")
+                    print(f"[DEBUG] Full image path used: {full_card_image_path}")
                     assets_dir = config.get("assets_dir", "") if config else ""
-                    print(f"Assets directory setting: {assets_dir}")
+                    print(f"[DEBUG] Assets directory setting: {assets_dir}")
+                    
+                    # Try to check if the image exists at various locations
+                    try:
+                        direct_path = Path(__file__).parent / card_image_path
+                        print(f"[DEBUG] Direct image path: {direct_path}")
+                        print(f"[DEBUG] Direct image exists: {direct_path.exists()}")
+                    except Exception as e:
+                        print(f"[DEBUG] Error checking direct image path: {e}")
                 
                 # Create the card as a simple container without gestures first
                 card_inner = ft.Container(
@@ -417,7 +446,7 @@ def run_app(
                                     border_radius=10,
                                 ),
                                 # Debug: Display image path for troubleshooting
-                                ft.Text(f"Image path: {card_image_path}", size=10, color=ft.colors.GREY_400),
+                                ft.Text(f"Image at: {full_card_image_path}", size=10, color=ft.colors.GREY_400),
                             ]) if card_image_path else ft.Container(height=0),
                             padding=10,
                         ),
