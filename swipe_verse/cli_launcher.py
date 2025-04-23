@@ -32,8 +32,11 @@ def launch_platform(
     # Initialize app configuration
     from swipe_verse.main import initialize_app
     
+    # Use default "tutorial" if game is None
+    game_theme_value = game if game is not None else "tutorial"
+    
     config = initialize_app(
-        game_theme=game,
+        game_theme=game_theme_value,
         debug=debug
     )
     
@@ -44,7 +47,7 @@ def launch_platform(
     
     # Output directory for builds
     if build_dir is None:
-        build_dir = os.getcwd()
+        build_dir = Path(os.getcwd())
     
     # Launch based on platform
     if target_platform == "android":
@@ -53,6 +56,8 @@ def launch_platform(
             from swipe_verse.platforms import android
             
             print("Preparing Android build...")
+            # At this point build_dir is guaranteed to be a Path
+            assert build_dir is not None, "build_dir should not be None here"
             output_dir = android.prepare_android_build(config, build_dir)
             
             print(f"\nAndroid build prepared in: {output_dir}")
@@ -81,6 +86,8 @@ def launch_platform(
             if build_dir:
                 # Prepare web build files
                 print("Preparing web build...")
+                # At this point build_dir is guaranteed to be a Path
+                assert build_dir is not None, "build_dir should not be None here"
                 output_dir = web.prepare_web_build(config, build_dir)
                 
                 print(f"\nWeb build prepared in: {output_dir}")
@@ -103,9 +110,11 @@ def launch_platform(
             # Import Desktop platform module
             from swipe_verse.platforms import desktop
             
-            if build_dir and build_dir != os.getcwd():
+            if build_dir and str(build_dir) != os.getcwd():
                 # Prepare desktop build files
                 print("Preparing desktop build...")
+                # At this point build_dir is guaranteed to be a Path
+                assert build_dir is not None, "build_dir should not be None here"
                 output_dir = desktop.prepare_desktop_build(config, build_dir)
                 
                 print(f"\nDesktop build prepared in: {output_dir}")

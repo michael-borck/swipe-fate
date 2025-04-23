@@ -2,9 +2,8 @@
 
 import json
 import os
-import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Dict, Optional
 
 import flet as ft
 from flet import Page
@@ -87,12 +86,12 @@ def run_app(
         
         try:
             with open(game_path, "r", encoding="utf-8") as f:
-                game_data = json.load(f)
+                game_data: Dict[str, Any] = json.load(f)
                 return game_data
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error loading game data: {e}")
             # Return a minimal game data structure if file can't be loaded
-            return {
+            default_data: Dict[str, Any] = {
                 "game_info": {
                     "title": "Error Loading Game",
                     "description": "Could not load game data."
@@ -105,6 +104,7 @@ def run_app(
                 },
                 "cards": []
             }
+            return default_data
     
     # Load the game data based on the selected theme
     game_data = load_game_data(config["game_theme"])
@@ -128,7 +128,8 @@ def run_app(
         Returns:
             Card data dictionary or None if not found
         """
-        return game_state["cards"].get(card_id)
+        card: Optional[Dict[str, Any]] = game_state["cards"].get(card_id)
+        return card
     
     # Helper function to handle card choice
     def handle_card_choice(card_id: str, choice_direction: str) -> Optional[str]:
@@ -163,7 +164,7 @@ def run_app(
         })
         
         # Get next card
-        next_card_id = choice.get("next_card")
+        next_card_id: Optional[str] = choice.get("next_card")
         if next_card_id:
             game_state["current_card_id"] = next_card_id
             return next_card_id
@@ -187,7 +188,8 @@ def run_app(
             page.window_maximizable = True
         
         # Set app title with version
-        page.title = f"SwipeVerse {config.get('version', '')}"
+        version = config.get('version', '') if config else ''
+        page.title = f"SwipeVerse {version}"
         page.padding = 0
         page.theme_mode = ft.ThemeMode.DARK
         
@@ -246,7 +248,7 @@ def run_app(
                         on_click=lambda e: navigate_to("achievements")
                     ),
                     ft.Container(height=10),  # Spacer
-                    ft.Text(f"Version {config.get('version', '')}", size=12, italic=True),
+                    ft.Text(f"Version {config.get('version', '') if config else ''}", size=12, italic=True),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
@@ -294,12 +296,13 @@ def run_app(
                 resource_icons = game_data.get("theme", {}).get("resource_icons", {})
                 
                 # Debug resource icons if enabled
-                if config.get("debug", False):
+                debug_mode = config.get("debug", False) if config else False
+                if debug_mode:
                     print(f"Resources: {game_state['resources']}")
                     print(f"Resource icons from game data: {resource_icons}")
                 
                 # Construct full asset paths from configured assets directory
-                assets_dir = config.get("assets_dir", "")
+                assets_dir = config.get("assets_dir", "") if config else ""
                 
                 # Create resource indicators
                 resource_indicators = ft.Row(
@@ -352,11 +355,12 @@ def run_app(
                 card_image_path = current_card.get("image", "")
                 
                 # Construct full asset path for card image
-                assets_dir = config.get("assets_dir", "")
+                assets_dir = config.get("assets_dir", "") if config else ""
                 full_card_image_path = os.path.join(assets_dir, card_image_path) if card_image_path else ""
                 
                 # Debug image loading
-                if config.get("debug", False):
+                debug_mode = config.get("debug", False) if config else False
+                if debug_mode:
                     print(f"Card image path from JSON: {card_image_path}")
                     print(f"Full card image path: {full_card_image_path}")
                     print(f"Assets directory: {assets_dir}")
@@ -503,19 +507,21 @@ def run_app(
                 # Function to handle card choice
                 def on_card_choice(e, direction):
                     # Debug output for card transitions
-                    if config.get("debug", False):
+                    debug_mode = config.get("debug", False) if config else False
+                    if debug_mode:
                         print(f"Processing choice: {direction} for card {game_state['current_card_id']}")
-                        print(f"Current card choices: {current_card.get('choices', {})}")
+                        if current_card:
+                            print(f"Current card choices: {current_card.get('choices', {})}")
                     
                     # Handle the choice and get next card ID
                     next_card_id = handle_card_choice(game_state["current_card_id"], direction)
                     
-                    if config.get("debug", False):
+                    if debug_mode:
                         print(f"Next card ID after choice: {next_card_id}")
                         print(f"Updated game state current card: {game_state['current_card_id']}")
                     
                     # Show effects
-                    choice = current_card.get("choices", {}).get(direction, {})
+                    choice = current_card.get("choices", {}).get(direction, {}) if current_card else {}
                     effects = choice.get("effects", {})
                     effect_text = ", ".join([f"{k}: {v:+d}" for k, v in effects.items()])
                     
@@ -666,7 +672,7 @@ def run_app(
                             ft.dropdown.Option("kingdom", "Medieval Kingdom"),
                             ft.dropdown.Option("business", "Corporate Business"),
                         ],
-                        value=config.get("game_theme"),
+                        value=config.get("game_theme") if config else "tutorial",
                         width=300,
                     ),
                     ft.Dropdown(
@@ -784,14 +790,14 @@ def run_app(
             port=port,
             host=host,
             view=ft.AppView.WEB_BROWSER,
-            assets_dir=config.get("assets_dir")
+            assets_dir=config.get("assets_dir") if config else None
         )
     elif platform == "android":
         # For Android, use a specific configuration
         os.environ["FLET_PLATFORM"] = "android"
         ft.app(
             target=main,
-            assets_dir=config.get("assets_dir"),
+            assets_dir=config.get("assets_dir") if config else None,
             use_color_emoji=True
         )
     elif platform == "ios":
@@ -799,12 +805,12 @@ def run_app(
         os.environ["FLET_PLATFORM"] = "ios"
         ft.app(
             target=main,
-            assets_dir=config.get("assets_dir"),
+            assets_dir=config.get("assets_dir") if config else None,
             use_color_emoji=True
         )
     else:
         # Desktop is the default
         ft.app(
             target=main,
-            assets_dir=config.get("assets_dir")
+            assets_dir=config.get("assets_dir") if config else None
         )
