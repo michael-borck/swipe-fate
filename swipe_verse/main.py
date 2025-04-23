@@ -32,9 +32,44 @@ def initialize_app(
     elif assets_dir is None:
         assets_dir = Path(__file__).parent / "assets"
     
+    # Ensure assets_dir exists
+    if not assets_dir.exists():
+        print(f"Warning: Assets directory {assets_dir} does not exist. Using package resources.")
+        # Fall back to a path that will be resolved by Flet for package resources
+        assets_dir = Path(".")
+    
     scenarios_dir = os.environ.get("SWIPEVERSE_SCENARIOS")
     if not scenarios_dir:
         scenarios_dir = str(Path(__file__).parent / "scenarios")
+    
+    # Ensure scenarios_dir exists
+    if not Path(scenarios_dir).exists():
+        print(f"Warning: Scenarios directory {scenarios_dir} does not exist.")
+        # Try to use a relative path that will be resolved properly in packaged app
+        alt_scenarios_dir = str(Path(__file__).parent / "scenarios")
+        if Path(alt_scenarios_dir).exists():
+            scenarios_dir = alt_scenarios_dir
+            print(f"Using alternative scenarios directory: {scenarios_dir}")
+    
+    # Print debugging information if in debug mode
+    if debug:
+        print("[DEBUG] Configuration Information:")
+        print(f"[DEBUG] assets_dir: {assets_dir}")
+        print(f"[DEBUG] scenarios_dir: {scenarios_dir}")
+        print(f"[DEBUG] game_theme: {game_theme}")
+        print(f"[DEBUG] version: {version}")
+        
+        # Check if directories exist
+        print(f"[DEBUG] assets_dir exists: {Path(assets_dir).exists()}")
+        print(f"[DEBUG] scenarios_dir exists: {Path(scenarios_dir).exists()}")
+        
+        # Test access to a sample file
+        try:
+            sample_path = Path(assets_dir) / "default" / "card_back.png"
+            print(f"[DEBUG] Sample file path: {sample_path}")
+            print(f"[DEBUG] Sample file exists: {sample_path.exists()}")
+        except Exception as e:
+            print(f"[DEBUG] Error checking sample file: {e}")
     
     return {
         "game_theme": game_theme,
@@ -311,7 +346,7 @@ def run_app(
                             content=ft.Stack([
                                 # Base icon - construct full path for each icon
                                 ft.Image(
-                                    src=os.path.join(assets_dir, resource_icons.get(name, "")),
+                                    src=resource_icons.get(name, ""),
                                     width=50,
                                     height=50,
                                     fit=ft.ImageFit.CONTAIN,
@@ -354,16 +389,16 @@ def run_app(
                 # Create the card display
                 card_image_path = current_card.get("image", "")
                 
-                # Construct full asset path for card image
-                assets_dir = config.get("assets_dir", "") if config else ""
-                full_card_image_path = os.path.join(assets_dir, card_image_path) if card_image_path else ""
+                # Use the path directly from JSON, Flet will handle asset resolution
+                full_card_image_path = card_image_path
                 
                 # Debug image loading
                 debug_mode = config.get("debug", False) if config else False
                 if debug_mode:
-                    print(f"Card image path from JSON: {card_image_path}")
-                    print(f"Full card image path: {full_card_image_path}")
-                    print(f"Assets directory: {assets_dir}")
+                    print(f"Card image path: {card_image_path}")
+                    print(f"Used for image: {full_card_image_path}")
+                    assets_dir = config.get("assets_dir", "") if config else ""
+                    print(f"Assets directory setting: {assets_dir}")
                 
                 # Create the card as a simple container without gestures first
                 card_inner = ft.Container(
@@ -785,32 +820,56 @@ def run_app(
     
     if platform == "web":
         # Run as a web application
+        assets_path = config.get("assets_dir") if config else None
+        
+        # Debug asset path
+        if config and config.get("debug", False):
+            print(f"Web mode: Using assets_dir: {assets_path}")
+            
         ft.app(
             target=main,
             port=port,
             host=host,
             view=ft.AppView.WEB_BROWSER,
-            assets_dir=config.get("assets_dir") if config else None
+            assets_dir=assets_path
         )
     elif platform == "android":
         # For Android, use a specific configuration
         os.environ["FLET_PLATFORM"] = "android"
+        assets_path = config.get("assets_dir") if config else None
+        
+        # Debug asset path
+        if config and config.get("debug", False):
+            print(f"Android mode: Using assets_dir: {assets_path}")
+            
         ft.app(
             target=main,
-            assets_dir=config.get("assets_dir") if config else None,
+            assets_dir=assets_path,
             use_color_emoji=True
         )
     elif platform == "ios":
         # For iOS, use a specific configuration
         os.environ["FLET_PLATFORM"] = "ios"
+        assets_path = config.get("assets_dir") if config else None
+        
+        # Debug asset path
+        if config and config.get("debug", False):
+            print(f"iOS mode: Using assets_dir: {assets_path}")
+            
         ft.app(
             target=main,
-            assets_dir=config.get("assets_dir") if config else None,
+            assets_dir=assets_path,
             use_color_emoji=True
         )
     else:
         # Desktop is the default
+        assets_path = config.get("assets_dir") if config else None
+        
+        # Debug asset path
+        if config and config.get("debug", False):
+            print(f"Desktop mode: Using assets_dir: {assets_path}")
+            
         ft.app(
             target=main,
-            assets_dir=config.get("assets_dir") if config else None
+            assets_dir=assets_path
         )

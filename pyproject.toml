@@ -1,6 +1,13 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "swipe_verse/**/*.py",
+    "swipe_verse/assets/**/*",
+    "swipe_verse/scenarios/**/*",
+]
 
 [project]
 name = "swipe-verse"
