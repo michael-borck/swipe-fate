@@ -170,6 +170,23 @@ mypy swipe_verse
 pytest
 ```
 
+### Development Tools
+
+The `tools/` directory contains utilities to help with development:
+
+```bash
+# Build and package SwipeVerse for distribution
+python tools/build.py dist
+
+# Build for a specific platform
+python tools/build.py platform --platform desktop
+
+# Run diagnostic tests for Flet
+python tools/test_flet_module.py
+```
+
+See `tools/README.md` for details on available development tools.
+
 ### Pre-commit Hooks
 
 Use pre-commit to automatically format, lint, and type-check code before commits.
