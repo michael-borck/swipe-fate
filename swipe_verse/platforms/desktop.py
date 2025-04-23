@@ -2,10 +2,12 @@
 
 import os
 from pathlib import Path
+from typing import Any, Dict, Union
+
 from swipe_verse.main import run_app
 
 
-def run_desktop_app(config):
+def run_desktop_app(config: Dict[str, Any]) -> None:
     """Run the desktop application.
     
     Args:
@@ -15,7 +17,7 @@ def run_desktop_app(config):
     run_app(platform="desktop", config=config)
 
 
-def prepare_desktop_build(config, output_dir):
+def prepare_desktop_build(config: Dict[str, Any], output_dir: Union[str, Path]) -> Path:
     """Prepare files for desktop distribution.
     
     Args:

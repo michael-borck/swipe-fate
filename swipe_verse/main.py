@@ -1,10 +1,10 @@
 """Main application controller for SwipeVerse."""
 
+import json
 import os
 import sys
-import json
 from pathlib import Path
-from typing import Dict, Optional, Any, Callable, List
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 import flet as ft
 from flet import Page
@@ -29,7 +29,7 @@ def initialize_app(
     """
     # Check environment variables for asset paths (used in packaged apps)
     if os.environ.get("SWIPEVERSE_ASSETS"):
-        assets_dir = Path(os.environ.get("SWIPEVERSE_ASSETS"))
+        assets_dir = Path(os.environ.get("SWIPEVERSE_ASSETS", ""))
     elif assets_dir is None:
         assets_dir = Path(__file__).parent / "assets"
     
@@ -48,7 +48,7 @@ def initialize_app(
 
 def run_app(
     platform: str = "desktop", 
-    config: Dict[str, Any] = None,
+    config: Optional[Dict[str, Any]] = None,
     port: int = 8550,
     host: str = "127.0.0.1"
 ) -> None:
@@ -82,7 +82,8 @@ def run_app(
             Game data dictionary
         """
         game_file = f"{game_theme}_game.json"
-        game_path = Path(config["scenarios_dir"]) / game_file
+        config_scenarios_dir = config["scenarios_dir"] if config else ""
+        game_path = Path(config_scenarios_dir) / game_file
         
         try:
             with open(game_path, "r", encoding="utf-8") as f:
@@ -108,8 +109,9 @@ def run_app(
     # Load the game data based on the selected theme
     game_data = load_game_data(config["game_theme"])
     
-    # Initialize game state
-    game_state = {
+    # Initialize game state with typing
+    GameState = Dict[str, Any]
+    game_state: GameState = {
         "current_card_id": None,
         "resources": game_data.get("game_settings", {}).get("initial_resources", {}),
         "cards": {card["id"]: card for card in game_data.get("cards", [])},
@@ -129,20 +131,23 @@ def run_app(
         return game_state["cards"].get(card_id)
     
     # Helper function to handle card choice
-    def handle_card_choice(card_id: str, choice_direction: str):
+    def handle_card_choice(card_id: str, choice_direction: str) -> Optional[str]:
         """Handle a card choice.
         
         Args:
             card_id: The current card ID
             choice_direction: 'left' or 'right'
+            
+        Returns:
+            Next card ID or None if no next card is specified
         """
         card = get_card(card_id)
         if not card:
-            return
+            return None
         
         choice = card.get("choices", {}).get(choice_direction)
         if not choice:
-            return
+            return None
         
         # Apply resource effects
         effects = choice.get("effects", {})
@@ -165,7 +170,7 @@ def run_app(
         
         return None
     
-    def main(page: Page):
+    def main(page: Page) -> None:
         """Initialize the Flet app on the page."""
         # Configure page based on platform
         if platform == "android" or platform == "ios":

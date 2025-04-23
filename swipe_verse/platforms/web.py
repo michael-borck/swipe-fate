@@ -2,10 +2,12 @@
 
 import os
 from pathlib import Path
+from typing import Any, Dict, Union
+
 from swipe_verse.main import run_app
 
 
-def run_web_server(config):
+def run_web_server(config: Dict[str, Any]) -> None:
     """Run the web server.
     
     Args:
@@ -19,7 +21,7 @@ def run_web_server(config):
     run_app(platform="web", config=config, port=port, host=host)
 
 
-def prepare_web_build(config, output_dir):
+def prepare_web_build(config: Dict[str, Any], output_dir: Union[str, Path]) -> Path:
     """Prepare files for web distribution.
     
     Args:

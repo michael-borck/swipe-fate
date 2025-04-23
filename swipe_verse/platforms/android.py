@@ -3,10 +3,10 @@
 import os
 import shutil
 from pathlib import Path
-from swipe_verse.main import initialize_app
+from typing import Any, Dict, Union, Optional
 
 
-def prepare_android_build(config, output_dir):
+def prepare_android_build(config: Dict[str, Any], output_dir: Union[str, Path]) -> Path:
     """Prepare files for Android build.
     
     Args:
