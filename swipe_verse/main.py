@@ -357,42 +357,29 @@ def run_app(
                     print(f"Resource icons from game data: {resource_icons}")
                 
                 # Construct full asset paths from configured assets directory
-                assets_dir = config.get("assets_dir", "") if config else ""
+                config.get("assets_dir", "") if config else ""
                 
                 # Create resource indicators
                 resource_indicators = ft.Row(
                     controls=[
                         ft.Container(
                             content=ft.Stack([
-                                # Base icon - try different path pattern
+                                # Base icon - use path relative to assets_dir
                                 ft.Image(
-                                    # Using /assets/ path pattern for Flet
-                                    src=f"/assets/{resource_icons.get(name, '').replace('assets/', '')}" if resource_icons.get(name, '') else "",
+                                    # Flet expects path relative to assets_dir (e.g., "default/resource_icons/icon.png")
+                                    src=(icon_path := resource_icons.get(name, '')) and icon_path.removeprefix('assets/').lstrip('/'),
                                     width=50,
                                     height=50,
                                     fit=ft.ImageFit.CONTAIN,
-                                    error_content=ft.Text(f"Icon not found: {name}"),
+                                    error_content=ft.Text(f"Icon missing: {name}"),
                                 ),
-                                # Colored overlay to indicate level (empty container that is partially filled)
+                                # Dark-tint depletion overlay - positioned at the top
+                                # and clipped based on the depleted amount (starting at 0%, grows as resource increases)
                                 ft.Container(
                                     width=50,
-                                    height=50 * (1 - value / 100),  # Fill from bottom up
-                                    bgcolor=ft.colors.with_opacity(0.5, ft.colors.BLACK),
-                                    border_radius=ft.border_radius.only(
-                                        top_left=50,
-                                        top_right=50,
-                                    ),
+                                    height=50 * (1 - value / 100),  # Top-down depletion overlay
+                                    bgcolor=ft.colors.with_opacity(0.6, ft.colors.BLACK),
                                     alignment=ft.alignment.top_center,
-                                ),
-                                # Resource value text
-                                ft.Container(
-                                    content=ft.Text(
-                                        f"{value}",
-                                        size=14,
-                                        weight=ft.FontWeight.BOLD,
-                                        color=ft.colors.WHITE,
-                                    ),
-                                    alignment=ft.alignment.center,
                                 )
                             ]),
                             width=60,
@@ -411,20 +398,21 @@ def run_app(
                 card_image_path = current_card.get("image", "")
                 
                 # Construct a path that will work in the installed package
-                full_card_image_path = f"/swipe_verse/{card_image_path}" if card_image_path else ""
+                # Flet expects paths relative to the `assets_dir`
+                relative_card_image_path = card_image_path.removeprefix('assets/').lstrip('/') if card_image_path else ""
                 
                 # Debug image loading
                 debug_mode = config.get("debug", False) if config else False
                 if debug_mode:
                     print(f"[DEBUG] Card image from JSON: {card_image_path}")
-                    print(f"[DEBUG] Full image path used: {full_card_image_path}")
-                    assets_dir = config.get("assets_dir", "") if config else ""
-                    print(f"[DEBUG] Assets directory setting: {assets_dir}")
+                    print(f"[DEBUG] Relative image path used for Flet: {relative_card_image_path}")
+                    assets_dir_config = config.get("assets_dir", "") if config else ""
+                    print(f"[DEBUG] Assets directory setting: {assets_dir_config}")
                     
                     # Try to check if the image exists at various locations
                     try:
-                        direct_path = Path(__file__).parent / card_image_path
-                        print(f"[DEBUG] Direct image path: {direct_path}")
+                        direct_path = Path(__file__).parent / "assets" / relative_card_image_path
+                        print(f"[DEBUG] Calculated direct image path: {direct_path}")
                         print(f"[DEBUG] Direct image exists: {direct_path.exists()}")
                     except Exception as e:
                         print(f"[DEBUG] Error checking direct image path: {e}")
@@ -433,20 +421,21 @@ def run_app(
                 card_inner = ft.Container(
                     content=ft.Column([
                         ft.Text(current_card.get("title", ""), size=24, weight=ft.FontWeight.BOLD),
-                        # Card image - Debug image path directly
+                        # Card image - Use relative path
                         ft.Container(
                             content=ft.Column([
-                                # Show the card image (try multiple path approaches)
+                                # Show the card image (use path relative to assets_dir)
                                 ft.Image(
-                                    src=f"/assets/{card_image_path.replace('assets/', '')}" if card_image_path else "",
+                                    # Flet expects path relative to assets_dir (e.g., "themes/business/card_fronts/...")
+                                    src=relative_card_image_path,
                                     width=250,
                                     height=150,
                                     fit=ft.ImageFit.COVER,
-                                    error_content=ft.Text(f"Image not found: {card_image_path}"),
+                                    error_content=ft.Text(f"Image missing: {card_image_path}"),
                                     border_radius=10,
                                 ),
                                 # Debug: Display image path for troubleshooting
-                                ft.Text(f"Image: /assets/{card_image_path.replace('assets/', '')}", size=10, color=ft.colors.GREY_400),
+                                ft.Text(f"Image src: {relative_card_image_path}", size=10, color=ft.colors.GREY_400),
                             ]) if card_image_path else ft.Container(height=0),
                             padding=10,
                         ),
@@ -505,18 +494,20 @@ def run_app(
                     offset_x = min(max(swipe_distance, -max_offset), max_offset)
                     
                     # Update card position
-                    drag_container.offset = ft.transform.Offset(offset_x, 0)
-                    drag_container.rotate = ft.transform.Rotate(angle=rotation, alignment=ft.alignment.center)
+                    drag_container.offset = ft.transform.Offset(offset_x / 100, 0) # Adjust divisor for sensitivity
+                    drag_container.rotate = ft.transform.Rotate(angle=rotation * (3.14159 / 180), alignment=ft.alignment.center) # Convert degrees to radians
                     
                     # Visual feedback for swipe direction
                     if swipe_distance > 0:  # Swiping right
                         # Gradually change to green as we approach threshold
-                        green_intensity = int(100 + (155 * normalized_distance))
-                        card_inner.bgcolor = f"#{green_intensity:02x}ff{green_intensity:02x}80"
+                        green_intensity = int(200 + (55 * normalized_distance)) # Make it brighter
+                        alpha_intensity = int(100 + (155 * normalized_distance)) # Make it more opaque
+                        card_inner.bgcolor = f"#{'00'}{green_intensity:02x}{'00'}{alpha_intensity:02x}" # Green with alpha
                     elif swipe_distance < 0:  # Swiping left
                         # Gradually change to red as we approach threshold
-                        red_intensity = int(100 + (155 * normalized_distance))
-                        card_inner.bgcolor = f"#ff{red_intensity:02x}{red_intensity:02x}80"
+                        red_intensity = int(200 + (55 * normalized_distance)) # Make it brighter
+                        alpha_intensity = int(100 + (155 * normalized_distance)) # Make it more opaque
+                        card_inner.bgcolor = f"#{red_intensity:02x}{'00'}{'00'}{alpha_intensity:02x}" # Red with alpha
                     else:
                         card_inner.bgcolor = ft.colors.SURFACE_VARIANT
                     
@@ -531,30 +522,30 @@ def run_app(
                         direction = "right" if swipe_distance > 0 else "left"
                         
                         # Final animation position (off-screen)
-                        final_offset = 500 if direction == "right" else -500
+                        final_offset_x = 1.5 if direction == "right" else -1.5 # Use values > 1 or < -1 for off-screen
                         
                         # Animate card off-screen with proper rotation
-                        final_rotation = max_swipe_angle if direction == "right" else -max_swipe_angle
-                        drag_container.rotate = ft.transform.Rotate(angle=final_rotation, alignment=ft.alignment.center)
-                        drag_container.offset = ft.transform.Offset(final_offset, 0)
+                        final_rotation_degrees = max_swipe_angle if direction == "right" else -max_swipe_angle
+                        drag_container.rotate = ft.transform.Rotate(angle=final_rotation_degrees * (3.14159 / 180), alignment=ft.alignment.center)
+                        drag_container.offset = ft.transform.Offset(final_offset_x, 0)
                         
                         # Set final color based on direction
                         card_inner.bgcolor = ft.colors.with_opacity(0.8, ft.colors.GREEN_100 if direction == "right" else ft.colors.RED_100)
                         
-                        # Update UI to show animation
+                        # Update UI to show animation start
                         page.update()
                         
-                        # Process the choice directly - defer_call isn't available
-                        # Use a small delay before processing the choice to let animation be visible
-                        page.update()
+                        # Process the choice after a delay to see the animation
+                        # Note: Flet doesn't have a direct sleep in handlers. 
+                        # The best way is to update, process, then update again.
                         
                         # Process the choice
-                        on_card_choice(None, direction)
+                        on_card_choice(None, direction) 
+                        
                     else:
                         # Reset card position with animation
-                        drag_container.animate_offset = ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT)
                         drag_container.offset = ft.transform.Offset(0, 0)
-                        drag_container.rotate = None
+                        drag_container.rotate = None # Reset rotation
                         card_inner.bgcolor = ft.colors.SURFACE_VARIANT
                         page.update()
                     
@@ -595,16 +586,13 @@ def run_app(
                         action="OK"
                     )
                     page.snack_bar.open = True
-                    page.update()
+                    page.update() # Update to show snackbar
                     
                     # If there's a next card, refresh the screen to show it
                     if next_card_id:
-                        # Force a slight delay before showing the next card
-                        # to ensure the animation and snackbar are visible
-                        page.update()
-                        
                         # Refresh the game screen to show the next card
-                        show_game_screen()
+                        # Need to update the card content elements before calling show_game_screen again
+                        show_game_screen() 
                     else:
                         # Check if this is the end of the game or a card without a next_card
                         if not choice.get("next_card"):
@@ -674,7 +662,7 @@ def run_app(
                 ),
                 padding=10,
                 bgcolor=ft.colors.SURFACE_VARIANT,
-                width=page.window_width,
+                # width=page.window_width, # Let it expand naturally
             )
             
             # Combine all game elements
@@ -682,22 +670,26 @@ def run_app(
                 controls=[
                     resource_indicators if game_state["resources"] else ft.Container(),
                     ft.Container(height=20),  # Spacer
-                    card_content,
+                    card_content, # This is now the GestureDetector container
                     ft.Container(height=10),  # Spacer
                     card_actions,
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=5,
+                # Ensure the game content takes available space and centers card
+                expand=True, 
+                alignment=ft.MainAxisAlignment.CENTER,
             )
             
             # Combine header and content
             main_container.content = ft.Column(
                 controls=[
                     header,
-                    ft.Container(
+                    ft.Container( # Add a container to hold the main game content
                         content=game_content,
-                        expand=True,
-                        alignment=ft.alignment.center,
+                        expand=True, # Allow this container to fill remaining space
+                        alignment=ft.alignment.center, # Center content vertically
+                        padding=ft.padding.only(top=10, bottom=10) # Add padding
                     )
                 ],
                 spacing=0,
@@ -722,7 +714,7 @@ def run_app(
                 ),
                 padding=10,
                 bgcolor=ft.colors.SURFACE_VARIANT,
-                width=page.window_width,
+                # width=page.window_width, # Let it expand
             )
             
             # Settings content
@@ -764,18 +756,20 @@ def run_app(
                     ft.Container(height=20),  # Spacer
                     ft.ElevatedButton(
                         "Apply Settings",
-                        on_click=lambda e: navigate_to("title")
+                        on_click=lambda e: navigate_to("title") # Add logic to apply settings
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER, # Center vertically
                 spacing=20,
+                expand=True # Allow column to take space
             )
             
             # Combine header and content
             main_container.content = ft.Column(
                 controls=[
                     header,
-                    ft.Container(
+                    ft.Container( # Add container for alignment
                         content=settings_content,
                         expand=True,
                         alignment=ft.alignment.center,
@@ -803,7 +797,7 @@ def run_app(
                 ),
                 padding=10,
                 bgcolor=ft.colors.SURFACE_VARIANT,
-                width=page.window_width,
+                # width=page.window_width, # Let it expand
             )
             
             # Achievements content
@@ -820,14 +814,16 @@ def run_app(
                     ),
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER, # Center vertically
                 spacing=20,
+                expand=True # Allow column to take space
             )
             
             # Combine header and content
             main_container.content = ft.Column(
                 controls=[
                     header,
-                    ft.Container(
+                    ft.Container( # Add container for alignment
                         content=achievements_content,
                         expand=True,
                         alignment=ft.alignment.center,

@@ -12,10 +12,15 @@ class ResourceBar:
     """
 
     def __init__(
-        self, resources: Dict[str, int], resource_icons: Dict[str, str], **kwargs: Any
+        self,
+        resources: Dict[str, int],
+        resource_icons: Dict[str, str],
+        max_resources: Dict[str, int], # Add max_resources parameter
+        **kwargs: Any,
     ) -> None:
         self.resources = resources
         self.resource_icons = resource_icons
+        self.max_resources = max_resources
         self.resource_controls: Dict[str, ft.Tooltip] = {}
 
     def build(self) -> ft.Row:
@@ -44,27 +49,28 @@ class ResourceBar:
             src=icon_path, width=50, height=50, fit=ft.ImageFit.CONTAIN
         )
 
-        # The unfilled (greyed out) version - positioned at the top
-        # and clipped based on resource value
-        unfilled_height = (100 - value) / 100 * 50
-        unfilled_icon = ft.Container(
+        # The dark-tint depletion overlay - positioned at the top
+        # and clipped based on the depleted amount
+        depletion_height = (self.max_resources[resource_id] - value) / self.max_resources[resource_id] * 50
+        depletion_overlay = ft.Container(
             content=ft.Image(
                 src=icon_path,
                 width=50,
                 height=50,
-                color=ft.colors.GREY_400,
-                opacity=0.5,
+                color=ft.colors.BLACK, # Use black tint
+                color_blend_mode=ft.BlendMode.DARKEN, # Blend mode to apply tint
+                opacity=0.6, # Adjust opacity for tint effect
                 fit=ft.ImageFit.CONTAIN,
             ),
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
-            # Clip from the bottom based on the resource value
-            height=unfilled_height,
+            # Clip from the bottom based on the depleted amount
+            height=depletion_height,
             alignment=ft.alignment.top_center,
         )
 
-        # Stack the filled and unfilled versions
+        # Stack the filled version and the depletion overlay
         icon_stack = ft.Stack(
-            controls=[filled_icon, unfilled_icon], width=50, height=50
+            controls=[filled_icon, depletion_overlay], width=50, height=50
         )
 
         # Add a tooltip showing the resource name
@@ -81,9 +87,9 @@ class ResourceBar:
         # Get the stack
         stack = self.resource_controls[resource_id].content
 
-        # Update the unfilled (greyed out) portion height
-        unfilled_container = stack.controls[1]
-        unfilled_container.height = (100 - new_value) / 100 * 50
+        # Update the depletion overlay height
+        depletion_container = stack.controls[1] # Assuming depletion_overlay is still the second control in the stack
+        depletion_container.height = (self.max_resources[resource_id] - new_value) / self.max_resources[resource_id] * 50
 
         # Update the control
         stack.update()

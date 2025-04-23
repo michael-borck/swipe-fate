@@ -59,7 +59,17 @@ def sample_icons():
 
 
 @pytest.fixture
-def resource_bar(mock_flet, sample_resources, sample_icons, mocker):
+def max_resources():
+    """Create sample max resources for testing"""
+    return {
+        "resource1": 100, 
+        "resource2": 100,
+        "resource3": 100,
+        "resource4": 100,
+    }
+
+@pytest.fixture
+def resource_bar(mock_flet, sample_resources, sample_icons, max_resources, mocker):
     """Create a ResourceBar instance for testing"""
     # Patch the module import to use our mocked version
     import sys
@@ -78,14 +88,19 @@ def resource_bar(mock_flet, sample_resources, sample_icons, mocker):
     from swipe_verse.ui.components.resource_bar import ResourceBar
 
     # Create and return the instance
-    resource_bar = ResourceBar(resources=sample_resources, resource_icons=sample_icons)
+    resource_bar = ResourceBar(
+        resources=sample_resources, 
+        resource_icons=sample_icons,
+        max_resources=max_resources
+    )
     return resource_bar
 
 
-def test_resource_bar_creation(resource_bar, sample_resources, sample_icons):
+def test_resource_bar_creation(resource_bar, sample_resources, sample_icons, max_resources):
     """Test that the ResourceBar is created properly with the given resources"""
     assert resource_bar.resources == sample_resources
     assert resource_bar.resource_icons == sample_icons
+    assert resource_bar.max_resources == max_resources
     assert resource_bar.resource_controls == {}
 
 
@@ -120,10 +135,11 @@ def test_resource_bar_build(resource_bar, sample_resources, mocker, mock_flet):
     assert result == mock_row
 
 
-def test_create_resource_icon(resource_bar, sample_icons, mocker, mock_flet):
+def test_create_resource_icon(resource_bar, sample_icons, max_resources, mocker, mock_flet):
     """Test the resource icon creation method with mocked components"""
     resource_id = "resource1"
     value = 75
+    max_value = max_resources[resource_id]
 
     # Create mocks for the UI components
     mock_filled_icon = mocker.MagicMock()
@@ -151,11 +167,10 @@ def test_create_resource_icon(resource_bar, sample_icons, mocker, mock_flet):
     )
 
     # Verify Container creation with correct height calculation
-    unfilled_height = (100 - value) / 100 * 50  # 12.5px for 75% fill
+    depletion_height = (max_value - value) / max_value * 50  # Depletion from top using max_value
     mock_flet.Container.assert_called_once()
     container_args = mock_flet.Container.call_args[1]
-    assert container_args["clip_behavior"] == mock_flet.ClipBehavior.HARD_EDGE
-    assert container_args["height"] == unfilled_height
+    assert container_args["height"] == depletion_height
     assert container_args["alignment"] == mock_flet.alignment.top_center
 
     # Verify Stack creation
@@ -171,11 +186,12 @@ def test_create_resource_icon(resource_bar, sample_icons, mocker, mock_flet):
     assert result == mock_tooltip
 
 
-def test_update_resource(resource_bar, mocker):
+def test_update_resource(resource_bar, max_resources, mocker):
     """Test updating a resource value"""
     # Set up test data
     resource_id = "resource1"
     new_value = 40
+    max_value = max_resources[resource_id]
 
     # Create mock UI components
     mock_unfilled = mocker.MagicMock()
@@ -194,8 +210,8 @@ def test_update_resource(resource_bar, mocker):
     # Verify resource value was updated
     assert resource_bar.resources[resource_id] == new_value
 
-    # Verify container height was updated
-    expected_height = (100 - new_value) / 100 * 50  # 30px for 40% fill
+    # Verify container height was updated - depletion from top
+    expected_height = (max_value - new_value) / max_value * 50  # Using max_value
     assert mock_unfilled.height == expected_height
 
     # Verify stack.update was called

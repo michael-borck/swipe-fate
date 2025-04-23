@@ -33,7 +33,7 @@ class GameScreen:
         # Responsive layout for mobile-first design
         is_mobile = self.page.width < 600 if self.page and self.page.width else True
 
-        # Create resource icons with visual fill indicators
+        # Create resource icons with visual fill indicators and no numeric overlay
         # Convert resource_icons to Dict[str, str]
         resource_icons_str: Dict[str, str] = {
             k: str(v) for k, v in self.game_state.theme.resource_icons.items()
@@ -41,6 +41,7 @@ class GameScreen:
         self.resource_bar = ResourceBar(
             resources=self.game_state.resources,
             resource_icons=resource_icons_str,
+            max_resources=self.game_state.settings.initial_resources, # Pass initial_resources as max
         )
 
         # Create card components

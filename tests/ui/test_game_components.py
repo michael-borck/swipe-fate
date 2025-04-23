@@ -104,7 +104,17 @@ def sample_icons():
 
 
 @pytest.fixture
-def components(mock_flet, sample_card, sample_resources, sample_icons, mocker):
+def max_resources():
+    """Create sample max resources for testing"""
+    return {
+        "resource1": 100, 
+        "resource2": 100,
+        "resource3": 100,
+        "resource4": 100,
+    }
+
+@pytest.fixture
+def components(mock_flet, sample_card, sample_resources, sample_icons, max_resources, mocker):
     """Set up and import all UI components"""
     # Prepare the module imports
     import sys
@@ -131,7 +141,11 @@ def components(mock_flet, sample_card, sample_resources, sample_icons, mocker):
     card_display.page = mock_page
     card_display.update = mocker.MagicMock()
 
-    resource_bar = ResourceBar(resources=sample_resources, resource_icons=sample_icons)
+    resource_bar = ResourceBar(
+        resources=sample_resources, 
+        resource_icons=sample_icons,
+        max_resources=max_resources
+    )
 
     return {
         "card_display": card_display,
