@@ -23,6 +23,9 @@ class CardDisplay(ft.GestureDetector):
         self.current_x = 0
         self.card_container: Optional[ft.Container] = None
         self.card_image: Optional[ft.Image] = None
+        self.choice_overlay_stack: Optional[ft.Stack] = None  # Renamed for clarity
+        self.left_choice_text: Optional[ft.Text] = None  # Text for left choice
+        self.right_choice_text: Optional[ft.Text] = None # Text for right choice
 
         super().__init__(
             on_pan_start=self._on_pan_start,
@@ -54,6 +57,8 @@ class CardDisplay(ft.GestureDetector):
                 weight=ft.FontWeight.BOLD,
                 text_align=ft.TextAlign.CENTER,
                 color=ft.colors.BLACK,
+                max_lines=2, # Prevent overflow
+                overflow=ft.TextOverflow.ELLIPSIS,
             ),
             width=image_width,
             height=title_height,
@@ -62,11 +67,17 @@ class CardDisplay(ft.GestureDetector):
         )
 
         # Card image
+        image_path = getattr(self.card, 'image', None)
+        if not isinstance(image_path, str) or not image_path:
+            print(f"Warning: Card {self.card.id} has invalid or missing image path: {image_path}. Using default.")
+            image_path = "assets/default/card_fronts/event.png"
+
         self.card_image = ft.Image(
-            src=self.card.image,
+            src=image_path,
             width=image_width,
             height=image_height,
             fit=ft.ImageFit.CONTAIN,
+            error_content=ft.Text("Image?"), # Simpler error
         )
 
         # Card text
@@ -76,6 +87,8 @@ class CardDisplay(ft.GestureDetector):
                 size=14,
                 text_align=ft.TextAlign.CENTER,
                 color=ft.colors.BLACK,
+                max_lines=3,
+                overflow=ft.TextOverflow.ELLIPSIS,
             ),
             width=image_width,
             height=text_height,
@@ -95,7 +108,7 @@ class CardDisplay(ft.GestureDetector):
             spacing=5,
         )
 
-        # The card container that will be animated during swipe
+        # The card container
         self.card_container = ft.Container(
             content=card_content,
             width=container_width,
@@ -109,100 +122,136 @@ class CardDisplay(ft.GestureDetector):
                 offset=ft.Offset(2, 2),
             ),
             border=ft.border.all(1, ft.colors.BLACK12),
-            animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_IN_OUT),
+            animate_offset=ft.animation.Animation(100, ft.AnimationCurve.EASE_OUT),
+            animate_rotation=ft.animation.Animation(100, ft.AnimationCurve.EASE_OUT),
             padding=ft.padding.only(top=5, bottom=5),
         )
 
-        # Center the card in the container
+        # --- Overlay Elements --- 
+        # Positioned within the Stack, drawn *after* the card_container
+        self.left_choice_text = ft.Text(
+            self.card.choices.left.text if self.card.choices and self.card.choices.left else "",
+            size=20,
+            weight=ft.FontWeight.BOLD,
+            color=ft.colors.with_opacity(0.9, ft.colors.WHITE),
+            bgcolor=ft.colors.with_opacity(0.7, ft.colors.RED_ACCENT_700),
+            padding=10,
+            border_radius=5,
+            rotate=ft.transform.Rotate(-0.15),
+            # Use alignment within Stack instead of offset
+            # offset=ft.transform.Offset(-0.15, 0.15),
+            visible=False,
+            opacity=0,
+            animate_opacity=ft.animation.Animation(100, ft.AnimationCurve.LINEAR),
+        )
+        self.right_choice_text = ft.Text(
+            self.card.choices.right.text if self.card.choices and self.card.choices.right else "",
+            size=20,
+            weight=ft.FontWeight.BOLD,
+            color=ft.colors.with_opacity(0.9, ft.colors.WHITE),
+            bgcolor=ft.colors.with_opacity(0.7, ft.colors.GREEN_700),
+            padding=10,
+            border_radius=5,
+            rotate=ft.transform.Rotate(0.15),
+            # Use alignment within Stack instead of offset
+            # offset=ft.transform.Offset(0.15, 0.15),
+            visible=False,
+            opacity=0,
+            animate_opacity=ft.animation.Animation(100, ft.AnimationCurve.LINEAR),
+        )
+
+        # --- Stack Layout --- 
+        # Holds the card and the overlays
+        self.choice_overlay_stack = ft.Stack(
+            [
+                self.card_container, # Base layer
+                # Align overlays within the Stack
+                ft.Container(
+                    self.left_choice_text,
+                    alignment=ft.alignment.top_left,
+                    margin=ft.margin.only(top=20, left=20) # Adjust positioning
+                ),
+                ft.Container(
+                    self.right_choice_text,
+                    alignment=ft.alignment.top_right,
+                    margin=ft.margin.only(top=20, right=20) # Adjust positioning
+                ),
+            ]
+        )
+
+        # --- Final GestureDetector Container --- 
+        # This is what the GestureDetector itself returns
+        # It contains the Stack
         return ft.Container(
-            content=self.card_container,
+            content=self.choice_overlay_stack,
             width=container_width,
             height=container_height,
             alignment=ft.alignment.center,
+            # clip_behavior=ft.ClipBehavior.NONE, # Removing clip behavior, let Stack manage children
         )
 
     def _on_pan_start(self, e: ft.DragStartEvent) -> None:
-        """Handle the start of a swipe gesture"""
         self.is_swiping = True
         self.start_x = e.local_x
         self.current_x = e.local_x
 
     def _on_pan_update(self, e: ft.DragUpdateEvent) -> None:
-        """Handle ongoing swipe gesture updates"""
-        if not self.is_swiping or not self.card_container:
+        if not self.is_swiping or not self.card_container or not self.left_choice_text or not self.right_choice_text:
             return
 
         self.current_x = e.local_x
         delta_x = self.current_x - self.start_x
 
-        # Limit the drag distance
-        max_drag = 100
-        if abs(delta_x) > max_drag:
-            delta_x = max_drag if delta_x > 0 else -max_drag
+        # Card Movement (relative to the container width)
+        container_width = self.card_container.width or 1 # Avoid division by zero
+        self.card_container.offset = ft.transform.Offset(delta_x / container_width, 0)
 
-        # Update the card position
-        self.card_container.offset = ft.transform.Offset(delta_x / 100, 0)
-
-        # Add rotation based on the drag distance
-        angle = (delta_x / 100) * 0.2  # Reduce rotation amount
+        # Rotation
+        angle = (delta_x / (self.swipe_threshold * 1.5)) * 0.3
         self.card_container.rotate = ft.transform.Rotate(angle)
 
-        # Add border change to indicate the swipe direction
-        if delta_x > 20:  # Right swipe - positive choice
-            # Increase border thickness to indicate swipe
-            self.card_container.border = ft.border.all(2, ft.colors.GREEN)
-            # Add subtle glow effect for right swipe
-            self.card_container.shadow = ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=ft.colors.with_opacity(0.3, ft.colors.GREEN),
-                offset=ft.Offset(0, 0),
-            )
-        elif delta_x < -20:  # Left swipe - negative choice
-            # Increase border thickness to indicate swipe
-            self.card_container.border = ft.border.all(2, ft.colors.RED)
-            # Add subtle glow effect for left swipe
-            self.card_container.shadow = ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=15,
-                color=ft.colors.with_opacity(0.3, ft.colors.RED),
-                offset=ft.Offset(0, 0),
-            )
+        # Overlay Visibility & Opacity
+        overlay_threshold = 15
+        intensity = max(0.0, min(1.0, (abs(delta_x) - overlay_threshold) / (self.swipe_threshold - overlay_threshold)))
+
+        if delta_x > overlay_threshold:
+            self.right_choice_text.visible = True
+            self.right_choice_text.opacity = intensity
+            self.left_choice_text.visible = False
+            self.left_choice_text.opacity = 0
+        elif delta_x < -overlay_threshold:
+            self.left_choice_text.visible = True
+            self.left_choice_text.opacity = intensity
+            self.right_choice_text.visible = False
+            self.right_choice_text.opacity = 0
         else:
-            self.card_container.border = ft.border.all(1, ft.colors.BLACK12)
-            # Reset to default shadow
-            self.card_container.shadow = ft.BoxShadow(
-                spread_radius=1,
-                blur_radius=10,
-                color=ft.colors.BLACK26,
-                offset=ft.Offset(2, 2),
-            )
+            self.left_choice_text.visible = False
+            self.left_choice_text.opacity = 0
+            self.right_choice_text.visible = False
+            self.right_choice_text.opacity = 0
 
         self.update()
 
     def _on_pan_end(self, e: ft.DragEndEvent) -> None:
-        """Handle the end of a swipe gesture"""
-        if not self.is_swiping or not self.card_container:
+        if not self.is_swiping or not self.card_container or not self.left_choice_text or not self.right_choice_text:
             return
 
         self.is_swiping = False
         delta_x = self.current_x - self.start_x
 
-        # Reset the card position and clear swipe indication
+        # Reset card appearance
         self.card_container.offset = ft.transform.Offset(0, 0)
         self.card_container.rotate = ft.transform.Rotate(0)
-        # Remove border after swipe ends
-        self.card_container.border = None
-        # Reset to default shadow
-        self.card_container.shadow = ft.BoxShadow(
-            spread_radius=1,
-            blur_radius=10,
-            color=ft.colors.BLACK26,
-            offset=ft.Offset(2, 2),
-        )
-        self.update()
 
-        # Check if the swipe was decisive enough
+        # Hide overlays
+        self.left_choice_text.visible = False
+        self.left_choice_text.opacity = 0
+        self.right_choice_text.visible = False
+        self.right_choice_text.opacity = 0
+
+        self.update() # Update UI immediately
+
+        # Trigger swipe action if threshold met
         if abs(delta_x) > self.swipe_threshold:
             if delta_x > 0 and self.on_swipe_right:
                 self.on_swipe_right(e)
@@ -210,10 +259,43 @@ class CardDisplay(ft.GestureDetector):
                 self.on_swipe_left(e)
 
     def update_card(self, card: Card) -> None:
-        """Update the card being displayed"""
         self.card = card
-        # Update the displayed image if available
-        if self.card_image:
-            self.card_image.src = card.image
-        # Trigger UI update
+
+        if not all([self.card_container, self.left_choice_text, self.right_choice_text]):
+            print("Error: CardDisplay UI elements not fully initialized during update_card")
+            return
+
+        # Update card content directly (more robust)
+        # Assuming self.card_container.content is the ft.Column
+        if isinstance(self.card_container.content, ft.Column) and len(self.card_container.content.controls) == 3:
+            title_container = self.card_container.content.controls[0]
+            image_control = self.card_container.content.controls[1]
+            text_container = self.card_container.content.controls[2]
+
+            if isinstance(title_container, ft.Container) and isinstance(title_container.content, ft.Text):
+                title_container.content.value = card.title
+
+            if isinstance(image_control, ft.Image):
+                image_path = getattr(card, 'image', None)
+                if not isinstance(image_path, str) or not image_path:
+                    image_path = "assets/default/card_fronts/event.png"
+                image_control.src = image_path
+
+            if isinstance(text_container, ft.Container) and isinstance(text_container.content, ft.Text):
+                text_container.content.value = card.text
+        else:
+            print("Error: Could not update card content structure.")
+
+        # Update overlay text values
+        self.left_choice_text.value = card.choices.left.text if card.choices and card.choices.left else ""
+        self.right_choice_text.value = card.choices.right.text if card.choices and card.choices.right else ""
+
+        # Reset visual state
+        self.card_container.offset = ft.transform.Offset(0, 0)
+        self.card_container.rotate = ft.transform.Rotate(0)
+        self.left_choice_text.visible = False
+        self.left_choice_text.opacity = 0
+        self.right_choice_text.visible = False
+        self.right_choice_text.opacity = 0
+
         self.update()

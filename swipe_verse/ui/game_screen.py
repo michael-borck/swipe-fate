@@ -26,51 +26,42 @@ class GameScreen:
         self.card_display: Optional[CardDisplay] = None
         self.resource_bar: Optional[ResourceBar] = None
         self.page: Optional[ft.Page] = None
-        self.controls: List[ft.Control] = []
+        self.controls: List[ft.Control] = [] # List to hold the main layout control
+        self.main_column: Optional[ft.Column] = None # Reference to the main column for updates
 
     def build(self) -> ft.Column:
         """Build the game screen with all its components"""
-        # Responsive layout for mobile-first design
-        is_mobile = self.page.width < 600 if self.page and self.page.width else True
 
-        # Create resource icons with visual fill indicators and no numeric overlay
-        # Convert resource_icons to Dict[str, str]
+        # Resource Bar
         resource_icons_str: Dict[str, str] = {
             k: str(v) for k, v in self.game_state.theme.resource_icons.items()
         }
         self.resource_bar = ResourceBar(
             resources=self.game_state.resources,
             resource_icons=resource_icons_str,
-            max_resources=self.game_state.settings.initial_resources, # Pass initial_resources as max
+            max_resources=self.game_state.settings.initial_resources,
         )
 
-        # Create card components
-        card_text = ft.Container(
-            content=ft.Text(
-                self.game_state.current_card.text,
-                size=16 if is_mobile else 18,
-                text_align=ft.TextAlign.CENTER,
-            ),
-            margin=ft.margin.only(bottom=10, top=10),
-            padding=ft.padding.all(10),
-        )
-
-        # Create card display with swipe gestures
-        # Convert Card from config to Card from models.card
+        # Card Display (handles title, text, image, and swipe overlays)
         from swipe_verse.models.card import Card as ModelCard
         from swipe_verse.models.card import CardChoice as ModelCardChoice
+
+        # Ensure current_card has choices before accessing them
+        choices_dict = {}
+        if self.game_state.current_card.choices:
+            choices_dict = {
+                k: ModelCardChoice(
+                    text=v.text, effects=v.effects, next_card=v.next_card
+                )
+                for k, v in self.game_state.current_card.choices.items()
+            }
 
         current_card = ModelCard(
             id=self.game_state.current_card.id,
             title=self.game_state.current_card.title,
             text=self.game_state.current_card.text,
             image=self.game_state.current_card.image,
-            choices={
-                k: ModelCardChoice(
-                    text=v.text, effects=v.effects, next_card=v.next_card
-                )
-                for k, v in self.game_state.current_card.choices.items()
-            },
+            choices=choices_dict,
         )
 
         self.card_display = CardDisplay(
@@ -79,34 +70,10 @@ class GameScreen:
             on_swipe_right=self._handle_swipe_right,
         )
 
-        card_title = ft.Text(
-            self.game_state.current_card.title,
-            size=20 if is_mobile else 24,
-            weight=ft.FontWeight.BOLD,
-            text_align=ft.TextAlign.CENTER,
-        )
-
-        # Game stats section
+        # Game Stats Section
         game_stats = self._create_game_stats()
 
-        # Decision buttons (alternative to swiping)
-        decision_buttons = ft.Row(
-            alignment=ft.MainAxisAlignment.SPACE_AROUND,
-            controls=[
-                ft.ElevatedButton(
-                    text=self.game_state.current_card.choices["left"].text,
-                    on_click=self._handle_swipe_left,
-                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-                ),
-                ft.ElevatedButton(
-                    text=self.game_state.current_card.choices["right"].text,
-                    on_click=self._handle_swipe_right,
-                    style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-                ),
-            ],
-        )
-
-        # Create menu buttons
+        # Menu Buttons
         menu_buttons = ft.Row(
             [
                 ft.ElevatedButton(
@@ -131,9 +98,7 @@ class GameScreen:
                 ),
                 ft.ElevatedButton(
                     "Main Menu",
-                    on_click=lambda _: self.on_main_menu()
-                    if self.on_main_menu
-                    else None,
+                    on_click=lambda _: self.on_main_menu() if self.on_main_menu else None,
                     icon=ft.icons.HOME,
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
@@ -146,40 +111,34 @@ class GameScreen:
             spacing=10,
         )
 
-        # Stack all components in the required order
-        main_column = ft.Column(
+        # --- Main Layout Column --- 
+        # Removed card_text, card_title, and decision_buttons as they are now part of CardDisplay
+        # or implicitly handled by swipe
+        self.main_column = ft.Column(
             controls=[
-                self.resource_bar.build(),  # Call build() for the ResourceBar
-                card_text,
-                self.card_display,
-                card_title,
-                game_stats,
-                decision_buttons,
-                ft.Container(height=10),  # Spacing
-                menu_buttons,
+                self.resource_bar.build(), # Top: Resource bar
+                self.card_display,       # Middle: The interactive card display
+                game_stats,             # Below Card: Game statistics
+                ft.Container(height=20),  # Spacing
+                menu_buttons,           # Bottom: Menu buttons
             ],
-            alignment=ft.MainAxisAlignment.START,
-            spacing=10,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN, # Distribute space
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=15,
             expand=True,
         )
 
-        # Store the controls for updating later
-        self.controls = [main_column]
+        # Store the main column for potential direct updates
+        self.controls = [self.main_column]
 
-        return main_column
+        return self.main_column
 
     def _create_game_stats(self) -> ft.Container:
         """Create a container with game statistics"""
-        # Calculate popularity based on the formula in game settings
         popularity = self.game_logic.calculate_popularity()
-
-        # Format turn count with the appropriate unit
         turn_text = f"{self.game_state.turn_count} {self.game_state.settings.turn_unit}"
-
-        # Calculate progress percentage
         progress = self.game_logic.calculate_progress()
 
-        # Create the stats container
         stats_container = ft.Container(
             content=ft.Column(
                 [
@@ -202,81 +161,79 @@ class GameScreen:
             padding=10,
             border_radius=5,
             bgcolor=ft.colors.BLACK12,
+            # Ensure stats container doesn't stretch unnecessarily wide
+            width=350 * 0.9, # Match card width approx
+            alignment=ft.alignment.center,
         )
-
         return stats_container
 
-    def _handle_swipe_left(self, e: ft.DragEndEvent) -> None:
+    def _handle_swipe_left(self, e: Optional[ft.ControlEvent] = None) -> None: # Allow optional event arg
         """Process the left swipe action"""
         self._process_choice("left")
 
-    def _handle_swipe_right(self, e: ft.DragEndEvent) -> None:
+    def _handle_swipe_right(self, e: Optional[ft.ControlEvent] = None) -> None: # Allow optional event arg
         """Process the right swipe action"""
         self._process_choice("right")
 
     def _process_choice(self, direction: str) -> None:
         """Process the player's choice and update the game state"""
-        # Process the choice using game logic
+        # Check if there's a valid choice for the direction
+        if not self.game_state.current_card.choices or direction not in self.game_state.current_card.choices:
+            print(f"Warning: No valid choice for direction '{direction}' on card {self.game_state.current_card.id}")
+            return # Don't process if the choice doesn't exist
+
         result = self.game_logic.process_choice(direction)
 
-        # Update resource indicators
+        # Update Resource Bar
         if self.resource_bar:
             self.resource_bar.update_all_resources(self.game_state.resources)
 
-        # Update card display with the new card
+        # Update Card Display (it handles its own title/text/image update)
         if self.card_display:
-            # Convert Card from config to Card from models.card
             from swipe_verse.models.card import Card as ModelCard
             from swipe_verse.models.card import CardChoice as ModelCardChoice
+            
+            # Ensure next card has choices before accessing them
+            next_choices_dict = {}
+            if self.game_state.current_card.choices:
+                 next_choices_dict = {
+                     k: ModelCardChoice(
+                         text=v.text, effects=v.effects, next_card=v.next_card
+                     )
+                     for k, v in self.game_state.current_card.choices.items()
+                 }
 
-            current_card = ModelCard(
+            next_card = ModelCard(
                 id=self.game_state.current_card.id,
                 title=self.game_state.current_card.title,
                 text=self.game_state.current_card.text,
                 image=self.game_state.current_card.image,
-                choices={
-                    k: ModelCardChoice(
-                        text=v.text, effects=v.effects, next_card=v.next_card
-                    )
-                    for k, v in self.game_state.current_card.choices.items()
-                },
+                choices=next_choices_dict,
             )
+            self.card_display.update_card(next_card)
 
-            self.card_display.update_card(current_card)
+        # Update Game Stats (find the stats container and update it)
+        if self.main_column:
+            for i, control in enumerate(self.main_column.controls):
+                 # Identify the stats container (assuming it's a Container with specific content)
+                 # This check might need refinement based on exact structure
+                 if isinstance(control, ft.Container) and isinstance(control.content, ft.Column) and len(control.content.controls) == 2:
+                      # Found a likely candidate for the stats container
+                      new_stats = self._create_game_stats()
+                      self.main_column.controls[i] = new_stats # Replace the old stats container
+                      break # Stop searching once found
+            else: # If loop finished without break
+                print("Warning: Could not find game stats container to update.")
 
-        # Update card text and title
-        controls = [c for c in self.controls[0].controls]
+        # --- Removed update logic for separate card_text, card_title, decision_buttons ---
 
-        # Update the card text (2nd control)
-        controls[1].content.value = self.game_state.current_card.text
-        controls[1].update()
-
-        # Update the card title (4th control)
-        controls[3].value = self.game_state.current_card.title
-        controls[3].update()
-
-        # Update the stats (5th control)
-        new_stats = self._create_game_stats()
-        self.controls[0].controls[4] = new_stats
-
-        # Update the decision buttons (6th control)
-        decision_buttons = controls[5]
-        decision_buttons.controls[0].text = self.game_state.current_card.choices[
-            "left"
-        ].text
-        decision_buttons.controls[1].text = self.game_state.current_card.choices[
-            "right"
-        ].text
-        decision_buttons.update()
-
-        # In older Flet, we need to update the page
+        # Update the entire page
         if self.page:
             self.page.update()
 
-        # Check for game over condition
+        # Check for game over
         if result.game_over:
-            # Only show the message (summary optional)
-            self._show_game_over_dialog(result.message)
+            self._show_game_over_dialog(result.message, result.summary)
 
     def _show_game_over_dialog(
         self, message: str, game_summary: Optional[Dict[str, Any]] = None
@@ -347,7 +304,7 @@ class GameScreen:
 
             content_controls.append(ft.Divider(height=1, color=ft.colors.BLACK26))
 
-        # Create the dialog with new game first so test picks correct button
+        # Create the dialog
         dialog = ft.AlertDialog(
             title=ft.Text("Game Over"),
             content=ft.Column(content_controls, tight=True, spacing=10),
@@ -366,32 +323,24 @@ class GameScreen:
             self.page.update()
 
     def update(self) -> None:
-        """Update the game screen"""
+        """Explicitly update the page if needed (might not be necessary if updates happen in handlers)"""
         if self.page:
             self.page.update()
 
     def _show_achievements(self) -> None:
         """Show achievements and statistics screen"""
         if self.page:
-            # Create the achievements screen
             achievements_screen = AchievementsScreen(
                 game_logic=self.game_logic,
                 on_back=lambda: self._return_from_achievements(),
             )
-
-            # Add page reference to screen
             achievements_screen.page = self.page
-
-            # Save current screen
-            self._saved_screen = self.page.controls[0]
-
-            # Replace with achievements screen
+            self._saved_screen = self.page.controls[0] # Save current screen view
             self.page.controls[0] = achievements_screen.build()
             self.page.update()
 
     def _return_from_achievements(self) -> None:
         """Return from achievements screen to game screen"""
         if self.page and hasattr(self, "_saved_screen"):
-            # Restore game screen
-            self.page.controls[0] = self._saved_screen
+            self.page.controls[0] = self._saved_screen # Restore saved screen view
             self.page.update()
