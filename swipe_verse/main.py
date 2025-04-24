@@ -8,901 +8,590 @@ from typing import Any, Dict, Optional
 import flet as ft
 from flet import Page
 
+# Global settings/state (consider moving to a dedicated state management class later)
+APP_CONFIG: Dict[str, Any] = {
+    "game_theme": "tutorial",
+    "debug": False,
+    "assets_dir": "swipe_verse/assets",  # Relative path for Flet
+    "scenarios_dir": "swipe_verse/scenarios", # Relative path
+    "version": "0.1.11", # Consider fetching from pyproject.toml
+    "platform": "desktop" # Default, Flet might override
+}
+GAME_DATA: Dict[str, Any] = {}
+GAME_STATE: Dict[str, Any] = {}
 
-def initialize_app(
-    game_theme: str = "tutorial",
-    debug: bool = False,
-    assets_dir: Optional[Path] = None,
-    version: str = "0.1.11"
-) -> Dict[str, Any]:
-    """Initialize the application configuration.
+
+def load_game_data(game_theme: str) -> Dict[str, Any]:
+    """Load game data from JSON file based on theme."""
+    global APP_CONFIG
+    game_file = f"{game_theme}_game.json"
+    # Construct path relative to project root
+    scenarios_base = Path(__file__).resolve().parent.parent 
+    game_path = scenarios_base / APP_CONFIG["scenarios_dir"] / game_file
+
+    # Use this when running as installed package (adjust if needed)
+    # fallback_path = Path(__file__).parent / "scenarios" / game_file
     
-    Args:
-        game_theme: Theme/game to load (tutorial, kingdom, business)
-        debug: Enable debug mode
-        assets_dir: Custom assets directory path
-        version: Application version
+    print(f"Attempting to load game data from: {game_path}")
+    if not game_path.exists():
+        print(f"Error: Game file not found at {game_path}")
+        # print(f"Attempting fallback: {fallback_path}")
+        # if fallback_path.exists():
+        #     game_path = fallback_path
+        # else:
+        #     print(f"Error: Fallback game file also not found at {fallback_path}")
+        #     return {"error": "Game data not found"}
+        return {"error": "Game data not found"}
         
-    Returns:
-        Dict containing app configuration
-    """
-    # Check environment variables for asset paths (used in packaged apps)
-    if os.environ.get("SWIPEVERSE_ASSETS"):
-        assets_dir = Path(os.environ.get("SWIPEVERSE_ASSETS", ""))
-    elif assets_dir is None:
-        assets_dir = Path(__file__).parent / "assets"
-    
-    # Ensure assets_dir exists
-    if not assets_dir.exists():
-        print(f"Warning: Assets directory {assets_dir} does not exist. Using package resources.")
-        # Fall back to a path that will be resolved by Flet for package resources
-        assets_dir = Path(".")
-    
-    scenarios_dir = os.environ.get("SWIPEVERSE_SCENARIOS")
-    if not scenarios_dir:
-        scenarios_dir = str(Path(__file__).parent / "scenarios")
-    
-    # Ensure scenarios_dir exists
-    if not Path(scenarios_dir).exists():
-        print(f"Warning: Scenarios directory {scenarios_dir} does not exist.")
-        # Try to use a relative path that will be resolved properly in packaged app
-        alt_scenarios_dir = str(Path(__file__).parent / "scenarios")
-        if Path(alt_scenarios_dir).exists():
-            scenarios_dir = alt_scenarios_dir
-            print(f"Using alternative scenarios directory: {scenarios_dir}")
-    
-    # Print debugging information if in debug mode
-    if debug:
-        print("[DEBUG] Configuration Information:")
-        print(f"[DEBUG] assets_dir: {assets_dir}")
-        print(f"[DEBUG] scenarios_dir: {scenarios_dir}")
-        print(f"[DEBUG] game_theme: {game_theme}")
-        print(f"[DEBUG] version: {version}")
-        print(f"[DEBUG] __file__: {__file__}")
-        print(f"[DEBUG] Package root: {Path(__file__).parent}")
-        
-        # Check if directories exist
-        print(f"[DEBUG] assets_dir exists: {Path(assets_dir).exists()}")
-        print(f"[DEBUG] scenarios_dir exists: {Path(scenarios_dir).exists()}")
-        
-        # List what's in the assets directory
-        try:
-            print("[DEBUG] Assets directory contents:")
-            for path in Path(assets_dir).glob("**/*"):
-                if path.is_file():
-                    print(f"[DEBUG]   - {path}")
-        except Exception as e:
-            print(f"[DEBUG] Error listing assets: {e}")
-            
-        # Try multiple path formats for a test image
-        print("[DEBUG] Testing image path resolution:")
-        sample_paths = [
-            Path(assets_dir) / "default" / "card_back.png",
-            Path(assets_dir) / "default/card_back.png",
-            Path(__file__).parent / "assets" / "default" / "card_back.png",
-            Path("swipe_verse") / "assets" / "default" / "card_back.png",
-            Path("/swipe_verse/assets/default/card_back.png"),
-        ]
-        
-        for path in sample_paths:
-            try:
-                print(f"[DEBUG]   Path: {path}")
-                print(f"[DEBUG]   Exists: {path.exists()}")
-            except Exception as e:
-                print(f"[DEBUG]   Error checking {path}: {e}")
-    
+    try:
+        with open(game_path, "r", encoding="utf-8") as f:
+            data: Dict[str, Any] = json.load(f)
+            print(f"Successfully loaded game: {data.get('game_info',{}).get('title')}")
+            return data
+    except (FileNotFoundError, json.JSONDecodeError, Exception) as e:
+        print(f"Error loading game data from {game_path}: {e}")
+        # Return a minimal structure on error
+        return {
+            "game_info": {"title": "Error Loading Game", "description": "Could not load game data."},
+            "theme": {"name": "Default Theme", "resource_icons": {}},
+            "game_settings": {"initial_resources": {}},
+            "cards": []
+        }
+
+def initialize_game_state(game_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Initialize the game state based on loaded game data."""
     return {
-        "game_theme": game_theme,
-        "debug": debug,
-        "assets_dir": str(assets_dir),
-        "scenarios_dir": scenarios_dir,
-        "version": version,
-    }
-
-
-def run_app(
-    platform: str = "desktop", 
-    config: Optional[Dict[str, Any]] = None,
-    port: int = 8550,
-    host: str = "127.0.0.1"
-) -> None:
-    """Run the application on the specified platform.
-    
-    Args:
-        platform: The target platform ("desktop", "web", "android", "ios")
-        config: Application configuration
-        port: Port to use for web server (web mode only)
-        host: Host address to bind to for web server (default: 127.0.0.1)
-    """
-    if config is None:
-        config = initialize_app()
-    
-    # Store platform in config
-    config["platform"] = platform
-    
-    # Update port and host in config
-    if platform == "web":
-        config["port"] = port
-        config["host"] = host
-    
-    # Load game data from JSON file
-    def load_game_data(game_theme: str) -> Dict[str, Any]:
-        """Load game data from JSON file.
-        
-        Args:
-            game_theme: The game theme to load
-            
-        Returns:
-            Game data dictionary
-        """
-        game_file = f"{game_theme}_game.json"
-        config_scenarios_dir = config["scenarios_dir"] if config else ""
-        game_path = Path(config_scenarios_dir) / game_file
-        
-        try:
-            with open(game_path, "r", encoding="utf-8") as f:
-                game_data: Dict[str, Any] = json.load(f)
-                return game_data
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error loading game data: {e}")
-            # Return a minimal game data structure if file can't be loaded
-            default_data: Dict[str, Any] = {
-                "game_info": {
-                    "title": "Error Loading Game",
-                    "description": "Could not load game data."
-                },
-                "theme": {
-                    "name": "Default Theme"
-                },
-                "game_settings": {
-                    "initial_resources": {}
-                },
-                "cards": []
-            }
-            return default_data
-    
-    # Load the game data based on the selected theme
-    game_data = load_game_data(config["game_theme"])
-    
-    # Initialize game state with typing
-    GameState = Dict[str, Any]
-    game_state: GameState = {
         "current_card_id": None,
-        "resources": game_data.get("game_settings", {}).get("initial_resources", {}),
+        "resources": game_data.get("game_settings", {}).get("initial_resources", {}).copy(),
         "cards": {card["id"]: card for card in game_data.get("cards", [])},
         "history": []
     }
-    
-    # Helper function to get card by ID
-    def get_card(card_id: str) -> Optional[Dict[str, Any]]:
-        """Get a card by its ID.
-        
-        Args:
-            card_id: The card ID to look up
-            
-        Returns:
-            Card data dictionary or None if not found
-        """
-        card: Optional[Dict[str, Any]] = game_state["cards"].get(card_id)
-        return card
-    
-    # Helper function to handle card choice
-    def handle_card_choice(card_id: str, choice_direction: str) -> Optional[str]:
-        """Handle a card choice.
-        
-        Args:
-            card_id: The current card ID
-            choice_direction: 'left' or 'right'
-            
-        Returns:
-            Next card ID or None if no next card is specified
-        """
-        card = get_card(card_id)
-        if not card:
-            return None
-        
-        choice = card.get("choices", {}).get(choice_direction)
-        if not choice:
-            return None
-        
-        # Apply resource effects
-        effects = choice.get("effects", {})
-        for resource, value in effects.items():
-            if resource in game_state["resources"]:
-                game_state["resources"][resource] += value
-        
-        # Record in history
-        game_state["history"].append({
-            "card_id": card_id,
-            "choice": choice_direction,
-            "effects": effects
-        })
-        
-        # Get next card
-        next_card_id: Optional[str] = choice.get("next_card")
-        if next_card_id:
-            game_state["current_card_id"] = next_card_id
-            return next_card_id
-        
+
+# Helper function to get card by ID
+def get_card(card_id: str) -> Optional[Dict[str, Any]]:
+    global GAME_STATE
+    card: Optional[Dict[str, Any]] = GAME_STATE.get("cards", {}).get(card_id)
+    return card
+
+# Helper function to handle card choice
+def handle_card_choice(card_id: str, choice_direction: str) -> Optional[str]:
+    global GAME_STATE
+    card = get_card(card_id)
+    if not card:
         return None
     
-    def main(page: Page) -> None:
-        """Initialize the Flet app on the page."""
-        # Configure page based on platform
-        if platform == "android" or platform == "ios":
-            # Mobile configuration
-            page.window_width = 400
-            page.window_height = 800
-            page.window_resizable = False
-            page.window_maximizable = False
-        else:
-            # Desktop/Web configuration
-            page.window_width = 800
-            page.window_height = 600
-            page.window_resizable = True
-            page.window_maximizable = True
-        
-        # Set app title with version
-        version = config.get('version', '') if config else ''
-        page.title = f"SwipeVerse {version}"
-        page.padding = 0
-        page.theme_mode = ft.ThemeMode.DARK
-        
-        # Track current screen for navigation
-        current_screen = "title"
-        
-        # Main content container that will hold all screens
-        main_container = ft.Container(
-            expand=True,
-            content=None,
-        )
-        
-        # Function to navigate to different screens
-        def navigate_to(screen_name):
-            nonlocal current_screen
-            current_screen = screen_name
-            
-            if screen_name == "title":
-                show_title_screen()
-            elif screen_name == "game":
-                show_game_screen()
-            elif screen_name == "settings":
-                show_settings_screen()
-            elif screen_name == "achievements":
-                show_achievements_screen()
-        
-        # Title Screen
-        def show_title_screen():
-            title_content = ft.Column(
-                controls=[
-                    ft.Text("SwipeVerse", size=40, weight=ft.FontWeight.BOLD),
-                    ft.Text("A card-based decision game", size=20),
-                    ft.Container(height=20),  # Spacer
-                    ft.ElevatedButton(
-                        "Start Game",
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=10),
-                        ),
-                        width=200,
-                        on_click=lambda e: navigate_to("game")
-                    ),
-                    ft.ElevatedButton(
-                        "Settings",
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=10),
-                        ),
-                        width=200,
-                        on_click=lambda e: navigate_to("settings")
-                    ),
-                    ft.ElevatedButton(
-                        "Achievements",
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=10),
-                        ),
-                        width=200,
-                        on_click=lambda e: navigate_to("achievements")
-                    ),
-                    ft.Container(height=10),  # Spacer
-                    ft.Text(f"Version {config.get('version', '') if config else ''}", size=12, italic=True),
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER,
-                spacing=12,
-            )
-            
-            main_container.content = title_content
-            page.update()
-        
-        # Game Screen
-        def show_game_screen():
-            # If no current card, start with the first card
-            if not game_state["current_card_id"] and game_data.get("cards"):
-                game_state["current_card_id"] = game_data["cards"][0]["id"]
-            
-            # Get the current card
-            current_card = get_card(game_state["current_card_id"]) if game_state["current_card_id"] else None
-            
-            if not current_card:
-                # No card to display, show error
-                card_content = ft.Container(
-                    content=ft.Column([
-                        ft.Text("No cards available", size=24, color=ft.colors.ERROR),
-                        ft.Text("Please check your game configuration.", size=16)
-                    ]),
-                    padding=20,
-                    bgcolor=ft.colors.SURFACE_VARIANT,
-                    border_radius=10,
-                    width=300,
-                    height=400,
-                    alignment=ft.alignment.center,
-                )
-                card_actions = ft.Row(
-                    controls=[
-                        ft.ElevatedButton(
-                            "Back to Menu",
-                            on_click=lambda e: navigate_to("title")
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                )
-            else:
-                # Create resource indicators with icons
-                # Get resource icons from game data
-                resource_icons = game_data.get("theme", {}).get("resource_icons", {})
-                
-                # Debug resource icons if enabled
-                debug_mode = config.get("debug", False) if config else False
-                if debug_mode:
-                    print(f"Resources: {game_state['resources']}")
-                    print(f"Resource icons from game data: {resource_icons}")
-                
-                # Construct full asset paths from configured assets directory
-                config.get("assets_dir", "") if config else ""
-                
-                # Create resource indicators
-                resource_indicators = ft.Row(
-                    controls=[
-                        ft.Container(
-                            content=ft.Stack([
-                                # Base icon - use path relative to assets_dir
-                                ft.Image(
-                                    # Flet expects path relative to assets_dir (e.g., "default/resource_icons/icon.png")
-                                    src=(icon_path := resource_icons.get(name, '')) and icon_path.removeprefix('assets/').lstrip('/'),
-                                    width=50,
-                                    height=50,
-                                    fit=ft.ImageFit.CONTAIN,
-                                    error_content=ft.Text(f"Icon missing: {name}"),
-                                ),
-                                # Dark-tint depletion overlay - positioned at the top
-                                # and clipped based on the depleted amount (starting at 0%, grows as resource increases)
-                                ft.Container(
-                                    width=50,
-                                    height=50 * (1 - value / 100),  # Top-down depletion overlay
-                                    bgcolor=ft.colors.with_opacity(0.6, ft.colors.BLACK),
-                                    alignment=ft.alignment.top_center,
-                                )
-                            ]),
-                            width=60,
-                            height=60,
-                            tooltip=name.capitalize(),
-                            margin=5,
-                        )
-                        for name, value in game_state["resources"].items()
-                        if resource_icons.get(name)  # Only show resources with icons
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    spacing=10,
-                )
-                
-                # Create the card display
-                card_image_path = current_card.get("image", "")
-                
-                # Construct a path that will work in the installed package
-                # Flet expects paths relative to the `assets_dir`
-                relative_card_image_path = card_image_path.removeprefix('assets/').lstrip('/') if card_image_path else ""
-                
-                # Debug image loading
-                debug_mode = config.get("debug", False) if config else False
-                if debug_mode:
-                    print(f"[DEBUG] Card image from JSON: {card_image_path}")
-                    print(f"[DEBUG] Relative image path used for Flet: {relative_card_image_path}")
-                    assets_dir_config = config.get("assets_dir", "") if config else ""
-                    print(f"[DEBUG] Assets directory setting: {assets_dir_config}")
-                    
-                    # Try to check if the image exists at various locations
-                    try:
-                        direct_path = Path(__file__).parent / "assets" / relative_card_image_path
-                        print(f"[DEBUG] Calculated direct image path: {direct_path}")
-                        print(f"[DEBUG] Direct image exists: {direct_path.exists()}")
-                    except Exception as e:
-                        print(f"[DEBUG] Error checking direct image path: {e}")
-                
-                # Create the card as a simple container without gestures first
-                card_inner = ft.Container(
-                    content=ft.Column([
-                        ft.Text(current_card.get("title", ""), size=24, weight=ft.FontWeight.BOLD),
-                        # Card image - Use relative path
-                        ft.Container(
-                            content=ft.Column([
-                                # Show the card image (use path relative to assets_dir)
-                                ft.Image(
-                                    # Flet expects path relative to assets_dir (e.g., "themes/business/card_fronts/...")
-                                    src=relative_card_image_path,
-                                    width=250,
-                                    height=150,
-                                    fit=ft.ImageFit.COVER,
-                                    error_content=ft.Text(f"Image missing: {card_image_path}"),
-                                    border_radius=10,
-                                ),
-                                # Debug: Display image path for troubleshooting
-                                ft.Text(f"Image src: {relative_card_image_path}", size=10, color=ft.colors.GREY_400),
-                            ]) if card_image_path else ft.Container(height=0),
-                            padding=10,
-                        ),
-                        ft.Container(
-                            content=ft.Text(current_card.get("text", ""), size=16, text_align=ft.TextAlign.CENTER),
-                            padding=10,
-                            width=280,
-                        ),
-                    ]),
-                    padding=15,
-                    bgcolor=ft.colors.SURFACE_VARIANT,
-                    border_radius=10,
-                    width=300,
-                    height=420,
-                    alignment=ft.alignment.center,
-                )
-                
-                # Create a drag area that contains the card
-                drag_container = ft.Container(
-                    content=card_inner,
-                    width=340,
-                    height=450,
-                    alignment=ft.alignment.center,
-                    animate_offset=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT),
-                )
-                
-                # Add gesture detection to the drag container
-                card_detector = ft.GestureDetector(
-                    mouse_cursor=ft.MouseCursor.MOVE,
-                    on_horizontal_drag_update=lambda e: handle_drag_update(e),
-                    on_horizontal_drag_end=lambda e: handle_drag_end(e),
-                    content=drag_container
-                )
-                
-                # Swipe variables
-                swipe_distance = 0
-                swipe_threshold = 100  # Distance required for a decision
-                max_swipe_angle = 10  # Maximum rotation angle in degrees
-                max_offset = 150  # Maximum offset for card movement
-                
-                # Drag handlers for card swiping
-                def handle_drag_update(e):
-                    nonlocal swipe_distance
-                    
-                    # Get the delta X from the drag event
-                    dx = e.delta_x if hasattr(e, 'delta_x') and e.delta_x is not None else 0
-                    
-                    # Update swipe distance
-                    swipe_distance += dx
-                    
-                    # Calculate normalized values for effects (0-1 range)
-                    normalized_distance = min(max(abs(swipe_distance) / swipe_threshold, 0), 1)
-                    
-                    # Apply rotation and movement based on swipe distance
-                    rotation = min(max(swipe_distance / (swipe_threshold / max_swipe_angle), -max_swipe_angle), max_swipe_angle)
-                    offset_x = min(max(swipe_distance, -max_offset), max_offset)
-                    
-                    # Update card position
-                    drag_container.offset = ft.transform.Offset(offset_x / 100, 0) # Adjust divisor for sensitivity
-                    drag_container.rotate = ft.transform.Rotate(angle=rotation * (3.14159 / 180), alignment=ft.alignment.center) # Convert degrees to radians
-                    
-                    # Visual feedback for swipe direction
-                    if swipe_distance > 0:  # Swiping right
-                        # Gradually change to green as we approach threshold
-                        green_intensity = int(200 + (55 * normalized_distance)) # Make it brighter
-                        alpha_intensity = int(100 + (155 * normalized_distance)) # Make it more opaque
-                        card_inner.bgcolor = f"#{'00'}{green_intensity:02x}{'00'}{alpha_intensity:02x}" # Green with alpha
-                    elif swipe_distance < 0:  # Swiping left
-                        # Gradually change to red as we approach threshold
-                        red_intensity = int(200 + (55 * normalized_distance)) # Make it brighter
-                        alpha_intensity = int(100 + (155 * normalized_distance)) # Make it more opaque
-                        card_inner.bgcolor = f"#{red_intensity:02x}{'00'}{'00'}{alpha_intensity:02x}" # Red with alpha
-                    else:
-                        card_inner.bgcolor = ft.colors.SURFACE_VARIANT
-                    
-                    # Update UI
-                    page.update()
-                
-                def handle_drag_end(e):
-                    nonlocal swipe_distance
-                    
-                    if abs(swipe_distance) > swipe_threshold:
-                        # Direction determined by swipe
-                        direction = "right" if swipe_distance > 0 else "left"
-                        
-                        # Final animation position (off-screen)
-                        final_offset_x = 1.5 if direction == "right" else -1.5 # Use values > 1 or < -1 for off-screen
-                        
-                        # Animate card off-screen with proper rotation
-                        final_rotation_degrees = max_swipe_angle if direction == "right" else -max_swipe_angle
-                        drag_container.rotate = ft.transform.Rotate(angle=final_rotation_degrees * (3.14159 / 180), alignment=ft.alignment.center)
-                        drag_container.offset = ft.transform.Offset(final_offset_x, 0)
-                        
-                        # Set final color based on direction
-                        card_inner.bgcolor = ft.colors.with_opacity(0.8, ft.colors.GREEN_100 if direction == "right" else ft.colors.RED_100)
-                        
-                        # Update UI to show animation start
-                        page.update()
-                        
-                        # Process the choice after a delay to see the animation
-                        # Note: Flet doesn't have a direct sleep in handlers. 
-                        # The best way is to update, process, then update again.
-                        
-                        # Process the choice
-                        on_card_choice(None, direction) 
-                        
-                    else:
-                        # Reset card position with animation
-                        drag_container.offset = ft.transform.Offset(0, 0)
-                        drag_container.rotate = None # Reset rotation
-                        card_inner.bgcolor = ft.colors.SURFACE_VARIANT
-                        page.update()
-                    
-                    # Reset swipe distance
-                    swipe_distance = 0
-                
-                # Use the container with gesture detection
-                card_content = card_detector
-                
-                # Create choice buttons with actual choice text
-                left_choice = current_card.get("choices", {}).get("left", {})
-                right_choice = current_card.get("choices", {}).get("right", {})
-                
-                # Function to handle card choice
-                def on_card_choice(e, direction):
-                    # Debug output for card transitions
-                    debug_mode = config.get("debug", False) if config else False
-                    if debug_mode:
-                        print(f"Processing choice: {direction} for card {game_state['current_card_id']}")
-                        if current_card:
-                            print(f"Current card choices: {current_card.get('choices', {})}")
-                    
-                    # Handle the choice and get next card ID
-                    next_card_id = handle_card_choice(game_state["current_card_id"], direction)
-                    
-                    if debug_mode:
-                        print(f"Next card ID after choice: {next_card_id}")
-                        print(f"Updated game state current card: {game_state['current_card_id']}")
-                    
-                    # Show effects
-                    choice = current_card.get("choices", {}).get(direction, {}) if current_card else {}
-                    effects = choice.get("effects", {})
-                    effect_text = ", ".join([f"{k}: {v:+d}" for k, v in effects.items()])
-                    
-                    # Show effects in a snack bar
-                    page.snack_bar = ft.SnackBar(
-                        content=ft.Text(f"{choice.get('text', '')}\nEffects: {effect_text}"),
-                        action="OK"
-                    )
-                    page.snack_bar.open = True
-                    page.update() # Update to show snackbar
-                    
-                    # If there's a next card, refresh the screen to show it
-                    if next_card_id:
-                        # Refresh the game screen to show the next card
-                        # Need to update the card content elements before calling show_game_screen again
-                        show_game_screen() 
-                    else:
-                        # Check if this is the end of the game or a card without a next_card
-                        if not choice.get("next_card"):
-                            # End of game, go back to title
-                            page.snack_bar = ft.SnackBar(
-                                content=ft.Text("End of game! Thanks for playing."),
-                                action="OK"
-                            )
-                            page.snack_bar.open = True
-                            page.update()
-                            navigate_to("title")
-                
-                card_actions = ft.Row(
-                    controls=[
-                        ft.Container(
-                            content=ft.Column([
-                                ft.IconButton(
-                                    icon=ft.icons.ARROW_LEFT,
-                                    icon_size=30,
-                                    tooltip="Swipe Left",
-                                    on_click=lambda e: on_card_choice(e, "left")
-                                ),
-                                ft.Text(
-                                    left_choice.get("text", "Swipe Left"), 
-                                    size=12,
-                                    text_align=ft.TextAlign.CENTER
-                                ),
-                            ]),
-                            padding=5,
-                        ),
-                        ft.Container(width=50),  # Spacer
-                        ft.Container(
-                            content=ft.Column([
-                                ft.IconButton(
-                                    icon=ft.icons.ARROW_RIGHT,
-                                    icon_size=30,
-                                    tooltip="Swipe Right",
-                                    on_click=lambda e: on_card_choice(e, "right")
-                                ),
-                                ft.Text(
-                                    right_choice.get("text", "Swipe Right"), 
-                                    size=12,
-                                    text_align=ft.TextAlign.CENTER
-                                ),
-                            ]),
-                            padding=5,
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                )
-            
-            # Create header with back button
-            header = ft.Container(
-                content=ft.Row(
-                    controls=[
-                        ft.IconButton(
-                            icon=ft.icons.ARROW_BACK,
-                            on_click=lambda e: navigate_to("title")
-                        ),
-                        ft.Text(
-                            game_data.get("game_info", {}).get("title", "Game"), 
-                            size=20, 
-                            weight=ft.FontWeight.BOLD
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.START,
-                ),
-                padding=10,
-                bgcolor=ft.colors.SURFACE_VARIANT,
-                # width=page.window_width, # Let it expand naturally
-            )
-            
-            # Combine all game elements
-            game_content = ft.Column(
-                controls=[
-                    resource_indicators if game_state["resources"] else ft.Container(),
-                    ft.Container(height=20),  # Spacer
-                    card_content, # This is now the GestureDetector container
-                    ft.Container(height=10),  # Spacer
-                    card_actions,
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=5,
-                # Ensure the game content takes available space and centers card
-                expand=True, 
-                alignment=ft.MainAxisAlignment.CENTER,
-            )
-            
-            # Combine header and content
-            main_container.content = ft.Column(
-                controls=[
-                    header,
-                    ft.Container( # Add a container to hold the main game content
-                        content=game_content,
-                        expand=True, # Allow this container to fill remaining space
-                        alignment=ft.alignment.center, # Center content vertically
-                        padding=ft.padding.only(top=10, bottom=10) # Add padding
-                    )
-                ],
-                spacing=0,
-                expand=True,
-            )
-            
-            page.update()
-        
-        # Settings Screen
-        def show_settings_screen():
-            # Create header with back button
-            header = ft.Container(
-                content=ft.Row(
-                    controls=[
-                        ft.IconButton(
-                            icon=ft.icons.ARROW_BACK,
-                            on_click=lambda e: navigate_to("title")
-                        ),
-                        ft.Text("Settings", size=20, weight=ft.FontWeight.BOLD),
-                    ],
-                    alignment=ft.MainAxisAlignment.START,
-                ),
-                padding=10,
-                bgcolor=ft.colors.SURFACE_VARIANT,
-                # width=page.window_width, # Let it expand
-            )
-            
-            # Settings content
-            settings_content = ft.Column(
-                controls=[
-                    ft.Text("Game Settings", size=24),
-                    ft.Dropdown(
-                        label="Game",
-                        options=[
-                            ft.dropdown.Option("tutorial", "Tutorial"),
-                            ft.dropdown.Option("kingdom", "Medieval Kingdom"),
-                            ft.dropdown.Option("business", "Corporate Business"),
-                        ],
-                        value=config.get("game_theme") if config else "tutorial",
-                        width=300,
-                    ),
-                    ft.Dropdown(
-                        label="Visual Filter",
-                        options=[
-                            ft.dropdown.Option("none", "None"),
-                            ft.dropdown.Option("pixelate", "Pixelate"),
-                            ft.dropdown.Option("cartoon", "Cartoon"),
-                            ft.dropdown.Option("grayscale", "Grayscale"),
-                            ft.dropdown.Option("blur", "Blur"),
-                        ],
-                        value="none",
-                        width=300,
-                    ),
-                    ft.Dropdown(
-                        label="Difficulty",
-                        options=[
-                            ft.dropdown.Option("easy", "Easy"),
-                            ft.dropdown.Option("standard", "Standard"),
-                            ft.dropdown.Option("hard", "Hard"),
-                        ],
-                        value="standard",
-                        width=300,
-                    ),
-                    ft.Container(height=20),  # Spacer
-                    ft.ElevatedButton(
-                        "Apply Settings",
-                        on_click=lambda e: navigate_to("title") # Add logic to apply settings
-                    ),
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER, # Center vertically
-                spacing=20,
-                expand=True # Allow column to take space
-            )
-            
-            # Combine header and content
-            main_container.content = ft.Column(
-                controls=[
-                    header,
-                    ft.Container( # Add container for alignment
-                        content=settings_content,
-                        expand=True,
-                        alignment=ft.alignment.center,
-                    )
-                ],
-                spacing=0,
-                expand=True,
-            )
-            
-            page.update()
-        
-        # Achievements Screen
-        def show_achievements_screen():
-            # Create header with back button
-            header = ft.Container(
-                content=ft.Row(
-                    controls=[
-                        ft.IconButton(
-                            icon=ft.icons.ARROW_BACK,
-                            on_click=lambda e: navigate_to("title")
-                        ),
-                        ft.Text("Achievements", size=20, weight=ft.FontWeight.BOLD),
-                    ],
-                    alignment=ft.MainAxisAlignment.START,
-                ),
-                padding=10,
-                bgcolor=ft.colors.SURFACE_VARIANT,
-                # width=page.window_width, # Let it expand
-            )
-            
-            # Achievements content
-            achievements_content = ft.Column(
-                controls=[
-                    ft.Text("Achievements", size=24),
-                    ft.Container(
-                        content=ft.Text("No achievements yet!"),
-                        padding=10,
-                        bgcolor=ft.colors.SURFACE_VARIANT,
-                        border_radius=10,
-                        width=300,
-                        alignment=ft.alignment.center,
-                    ),
-                ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                alignment=ft.MainAxisAlignment.CENTER, # Center vertically
-                spacing=20,
-                expand=True # Allow column to take space
-            )
-            
-            # Combine header and content
-            main_container.content = ft.Column(
-                controls=[
-                    header,
-                    ft.Container( # Add container for alignment
-                        content=achievements_content,
-                        expand=True,
-                        alignment=ft.alignment.center,
-                    )
-                ],
-                spacing=0,
-                expand=True,
-            )
-            
-            page.update()
-        
-        # Add main container to page
-        page.add(main_container)
-        
-        # Show the title screen by default
-        navigate_to("title")
-        
-        print(f"Page initialized. Controls count: {len(page.controls)}")
+    choice = card.get("choices", {}).get(choice_direction)
+    if not choice:
+        return None
     
-    if platform == "web":
-        # Run as a web application
-        # Use the package's assets directory directly
-        assets_path = str(Path(__file__).parent / "assets")
+    # Apply resource effects
+    effects = choice.get("effects", {})
+    for resource, value in effects.items():
+        if resource in GAME_STATE.get("resources", {}):
+            GAME_STATE["resources"][resource] += value
+    
+    # Record in history
+    GAME_STATE.setdefault("history", []).append({
+        "card_id": card_id,
+        "choice": choice_direction,
+        "effects": effects
+    })
+    
+    # Get next card
+    next_card_id: Optional[str] = choice.get("next_card")
+    if next_card_id:
+        GAME_STATE["current_card_id"] = next_card_id
+        return next_card_id
+    
+    GAME_STATE["current_card_id"] = None # Explicitly set to None if no next card
+    return None
+
+def main(page: Page) -> None:
+    """Initialize the Flet app on the page."""
+    global APP_CONFIG, GAME_DATA, GAME_STATE
+    
+    # --- Initialization --- 
+    print("Starting main Flet function...")
+    APP_CONFIG["platform"] = page.platform # Get actual platform
+    APP_CONFIG["version"] = page.app_version if hasattr(page, 'app_version') else APP_CONFIG["version"] # Get version if available
+    
+    # Load initial game data
+    GAME_DATA = load_game_data(APP_CONFIG["game_theme"])
+    GAME_STATE = initialize_game_state(GAME_DATA)
+    
+    # If game data failed to load, show error message
+    if GAME_DATA.get("error"):
+        page.add(ft.Text(f"Error: {GAME_DATA.get('error')}", color=ft.colors.RED))
+        page.update()
+        return
         
-        # Debug asset path
-        if config and config.get("debug", False):
-            print(f"Web mode: Using assets_dir: {assets_path}")
-            print(f"Assets directory exists: {Path(assets_path).exists()}")
-            
-        ft.app(
-            target=main,
-            port=port,
-            host=host,
-            view=ft.AppView.WEB_BROWSER,
-            assets_dir=assets_path
-        )
-    elif platform == "android":
-        # For Android, use a specific configuration
-        os.environ["FLET_PLATFORM"] = "android"
-        # Use the package's assets directory directly
-        assets_path = str(Path(__file__).parent / "assets")
-        
-        # Debug asset path
-        if config and config.get("debug", False):
-            print(f"Android mode: Using assets_dir: {assets_path}")
-            print(f"Assets directory exists: {Path(assets_path).exists()}")
-            
-        ft.app(
-            target=main,
-            assets_dir=assets_path,
-            use_color_emoji=True
-        )
-    elif platform == "ios":
-        # For iOS, use a specific configuration
-        os.environ["FLET_PLATFORM"] = "ios"
-        # Use the package's assets directory directly
-        assets_path = str(Path(__file__).parent / "assets")
-        
-        # Debug asset path
-        if config and config.get("debug", False):
-            print(f"iOS mode: Using assets_dir: {assets_path}")
-            print(f"Assets directory exists: {Path(assets_path).exists()}")
-            
-        ft.app(
-            target=main,
-            assets_dir=assets_path,
-            use_color_emoji=True
-        )
+    print(f"Initial game state loaded for theme: {APP_CONFIG['game_theme']}")
+    print(f"Initial resources: {GAME_STATE.get('resources')}")
+    
+    # --- Page Configuration --- 
+    page.title = f"SwipeVerse {APP_CONFIG.get('version', '')}"
+    page.padding = 0
+    page.theme_mode = ft.ThemeMode.DARK
+    # page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    # page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    
+    # Configure page size based on platform
+    if page.platform in ["android", "ios"]:
+        page.window_width = 400
+        page.window_height = 800
+        page.window_resizable = False
+        page.window_maximizable = False
     else:
-        # Desktop is the default
-        # Use the package's assets directory directly
-        assets_path = str(Path(__file__).parent / "assets")
-        
-        # Debug asset path
-        if config and config.get("debug", False):
-            print(f"Desktop mode: Using assets_dir: {assets_path}")
-            print(f"Assets directory exists: {Path(assets_path).exists()}")
+        page.window_width = 500 # Adjusted for better card fit
+        page.window_height = 750
+        page.window_resizable = True
+        page.window_maximizable = True
+    
+    # --- State Variables --- 
+    # Using page.client_storage for simple state persistence across reloads (web)
+    current_screen = page.client_storage.get("current_screen") or "title"
+    # Ensure game state uses client storage if available (optional)
+    if page.client_storage.contains_key("game_state"): 
+        loaded_state = page.client_storage.get("game_state")
+        if isinstance(loaded_state, dict):
+            GAME_STATE = loaded_state # Restore game state
+            print("Restored game state from client storage")
+        else:
+             print("Invalid game state in client storage, resetting.")
+             page.client_storage.remove("game_state") # Clear invalid state
+             GAME_STATE = initialize_game_state(GAME_DATA) # Re-initialize
+    
+    # --- UI Elements --- 
+    # Main container that will hold all screens
+    main_container = ft.Container(
+        expand=True,
+        content=None,
+        alignment=ft.alignment.center,
+    )
+    
+    # Resource Indicators (will be updated dynamically)
+    resource_indicators_row = ft.Row(
+        controls=[], # Populated in show_game_screen
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=10,
+    )
+
+    # Card Display Area (will be updated dynamically)
+    card_display_area = ft.Column( # Use Column for centering card + actions
+        controls=[], # Populated in show_game_screen
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        alignment=ft.MainAxisAlignment.CENTER,
+        expand=True, # Make it take available vertical space
+    )
+    
+    # Header Container (reused across screens)
+    header_container = ft.Container(
+        content=None, # Set dynamically
+        padding=10,
+        bgcolor=ft.colors.SURFACE_VARIANT,
+        # width=page.window_width, # Let it expand naturally
+    )
+    
+    # --- Screen Building Functions --- 
+
+    def update_resource_indicators():
+        """Rebuilds the resource indicators row based on current GAME_STATE."""
+        global GAME_DATA, GAME_STATE
+        resource_icons = GAME_DATA.get("theme", {}).get("resource_icons", {})
+        indicators = []
+        for name, value in GAME_STATE.get("resources", {}).items():
+            icon_rel_path = resource_icons.get(name, '')
+            # Flet assets paths are relative to the `assets_dir` passed to ft.app
+            # Remove the initial `swipe_verse/assets/` part
+            flet_icon_src = icon_rel_path.removeprefix('swipe_verse/assets/').lstrip('/') if icon_rel_path else ''
             
-        ft.app(
-            target=main,
-            assets_dir=assets_path
+            indicators.append(
+                ft.Container(
+                    content=ft.Stack([
+                        ft.Image(
+                            src=flet_icon_src,
+                            width=40,
+                            height=40,
+                            fit=ft.ImageFit.CONTAIN,
+                            error_content=ft.Icon(ft.icons.BROKEN_IMAGE_OUTLINED, size=30),
+                        ),
+                        ft.Container( # Fill overlay
+                            width=40,
+                            height=40 * (1 - min(max(value, 0), 100) / 100),
+                            bgcolor=ft.colors.with_opacity(0.6, ft.colors.BLACK),
+                            alignment=ft.alignment.top_center,
+                        )
+                    ]),
+                    width=50,
+                    height=50,
+                    tooltip=f"{name.capitalize()}: {value}",
+                    margin=3,
+                )
+            )
+        resource_indicators_row.controls = indicators
+        # No page.update() here, called by the screen function
+
+    def navigate_to(screen_name):
+        """Handles navigation between screens."""
+        nonlocal current_screen
+        current_screen = screen_name
+        page.client_storage.set("current_screen", screen_name) # Persist screen
+        
+        # Clear main container before loading new screen
+        main_container.content = None 
+        page.clean() # Ensure previous screen's controls are removed
+        
+        if screen_name == "title":
+            show_title_screen()
+        elif screen_name == "game":
+            show_game_screen()
+        elif screen_name == "settings":
+            show_settings_screen()
+        elif screen_name == "achievements":
+            show_achievements_screen()
+        else:
+            show_title_screen() # Default to title
+            
+        page.update()
+        print(f"Navigated to: {screen_name}")
+        
+    def show_title_screen():
+        """Builds and displays the title screen."""
+        title_content = ft.Column(
+            controls=[
+                ft.Text("SwipeVerse", size=40, weight=ft.FontWeight.BOLD),
+                ft.Text("A card-based decision game", size=20),
+                ft.Container(height=20), 
+                ft.ElevatedButton("Start Game", width=200, on_click=lambda e: navigate_to("game")),
+                ft.ElevatedButton("Settings", width=200, on_click=lambda e: navigate_to("settings")),
+                ft.ElevatedButton("Achievements", width=200, on_click=lambda e: navigate_to("achievements")),
+                ft.Container(height=10),
+                ft.Text(f"Version {APP_CONFIG.get('version', '')}", size=12, italic=True, color=ft.colors.GREY_500),
+            ],
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=12,
+            expand=True,
         )
+        main_container.content = title_content
+        # No page.update() here, called by navigate_to
+
+    def show_game_screen():
+        """Builds and displays the main game screen."""
+        global GAME_STATE, GAME_DATA
+        
+        # If no current card, try to start with the first card
+        if not GAME_STATE.get("current_card_id") and GAME_DATA.get("cards"):
+            first_card_id = GAME_DATA["cards"][0]["id"]
+            GAME_STATE["current_card_id"] = first_card_id
+            print(f"Starting game with first card: {first_card_id}")
+        
+        current_card = get_card(GAME_STATE.get("current_card_id", ""))
+        
+        # --- Card Display Logic --- 
+        card_controls = []
+        if not current_card:
+            # No card or end of game
+            card_controls.append(
+                ft.Container(
+                    content=ft.Column([
+                        ft.Text("Game Over" if GAME_STATE.get("history") else "No cards available", size=24, weight=ft.FontWeight.BOLD),
+                        ft.Text("Thanks for playing!" if GAME_STATE.get("history") else "Check game configuration."),
+                        ft.Container(height=20),
+                        ft.ElevatedButton("Back to Menu", on_click=lambda e: navigate_to("title")),
+                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=10),
+                    padding=20,
+                    border_radius=10,
+                    width=300,
+                    alignment=ft.alignment.center,
+                )
+            )
+        else:
+            # Build the card display with swipe interaction
+            card_image_path = current_card.get("image", "")
+            # Flet expects paths relative to the `assets_dir`
+            relative_card_image_path = card_image_path.removeprefix('swipe_verse/assets/').lstrip('/') if card_image_path else ""
+            
+            # Card visual content
+            card_inner_content = ft.Column([
+                ft.Text(current_card.get("title", ""), size=20, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                ft.Container(
+                    content=ft.Image(
+                        src=relative_card_image_path,
+                        # width=250, # Let container define size
+                        height=150,
+                        fit=ft.ImageFit.CONTAIN,
+                        error_content=ft.Container( # Placeholder if image missing
+                            height=150, 
+                            alignment=ft.alignment.center, 
+                            content=ft.Icon(ft.icons.IMAGE_NOT_SUPPORTED_OUTLINED, color=ft.colors.GREY_500, size=40)
+                        ),
+                        border_radius=ft.border_radius.all(8),
+                    ), 
+                    padding=ft.padding.symmetric(vertical=10)
+                ) if card_image_path else ft.Container(height=10), # Space if no image
+                ft.Text(current_card.get("text", ""), size=16, text_align=ft.TextAlign.CENTER, selectable=True),
+            ], spacing=8, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+            
+            card_inner_container = ft.Container(
+                content=card_inner_content,
+                padding=15,
+                bgcolor=ft.colors.SURFACE_VARIANT,
+                border_radius=10,
+                width=300,
+                # height=400, # Dynamic height based on content
+                alignment=ft.alignment.center,
+                border=ft.border.all(1, ft.colors.with_opacity(0.1, ft.colors.WHITE)),
+                shadow=ft.BoxShadow(
+                    spread_radius=1,
+                    blur_radius=5,
+                    color=ft.colors.with_opacity(0.1, ft.colors.BLACK),
+                    offset=ft.Offset(2, 2),
+                )
+            )
+
+            # Draggable container for swipe effect
+            drag_container = ft.Container(
+                content=card_inner_container,
+                width=320, # Slightly wider for effect visibility
+                # height=450, # Let content define height
+                alignment=ft.alignment.center,
+                animate_offset=ft.animation.Animation(200, ft.AnimationCurve.EASE_OUT),
+                animate_rotation=ft.animation.Animation(200, ft.AnimationCurve.EASE_OUT),
+                animate_opacity=ft.animation.Animation(200, ft.AnimationCurve.EASE_OUT),
+            )
+
+            # Swipe state variables (need to be local to the instance of the card)
+            swipe_state = {"distance": 0}
+            swipe_threshold = 80  # Distance required for a decision
+            max_swipe_angle = 8   # Maximum rotation angle in degrees
+            max_offset = 120      # Maximum offset for card movement
+            
+            # Drag handlers need to access and modify swipe_state
+            def handle_drag_update(e: ft.DragUpdateEvent):
+                state = swipe_state # Capture local state
+                state["distance"] += e.delta_x
+                
+                # Clamp distance for calculations
+                clamped_distance = min(max(state["distance"], -max_offset*1.5), max_offset*1.5)
+                normalized_distance = min(abs(clamped_distance) / swipe_threshold, 1)
+                
+                rotation_rad = (clamped_distance / max_offset) * (max_swipe_angle * (3.14159 / 180))
+                offset_x = clamped_distance / drag_container.width if drag_container.width else 0
+                
+                drag_container.offset = ft.transform.Offset(offset_x, 0)
+                drag_container.rotate = ft.transform.Rotate(angle=rotation_rad, alignment=ft.alignment.center)
+                
+                # Visual feedback (opacity change on the container)
+                opacity_multiplier = 1.0 - (normalized_distance * 0.3) # Fade slightly
+                drag_container.opacity = opacity_multiplier
+                
+                # Choice text visibility (Optional)
+                # Could add Text controls here and adjust their visibility/opacity
+
+                page.update()
+
+            def handle_drag_end(e: ft.DragEndEvent):
+                state = swipe_state # Capture local state
+                final_distance = state["distance"]
+                state["distance"] = 0 # Reset for next interaction
+
+                if abs(final_distance) > swipe_threshold:
+                    direction = "right" if final_distance > 0 else "left"
+                    final_offset_x = 1.5 if direction == "right" else -1.5 
+                    final_rotation = max_swipe_angle if direction == "right" else -max_swipe_angle
+                    final_rotation_rad = final_rotation * (3.14159 / 180)
+                    
+                    # Animate card off-screen
+                    drag_container.offset = ft.transform.Offset(final_offset_x, 0)
+                    drag_container.rotate = ft.transform.Rotate(angle=final_rotation_rad, alignment=ft.alignment.center)
+                    drag_container.opacity = 0 # Fade out
+                    page.update() 
+                    
+                    # Process the choice after animation (Flet doesn't block, so this happens quickly)
+                    # Consider ft.Timer for a delay if needed
+                    process_choice(direction)
+                    
+                else:
+                    # Reset card position animation
+                    drag_container.offset = ft.transform.Offset(0, 0)
+                    drag_container.rotate = ft.transform.Rotate(0)
+                    drag_container.opacity = 1.0
+                    page.update()
+            
+            # Gesture detector wraps the draggable container
+            card_gesture_detector = ft.GestureDetector(
+                mouse_cursor=ft.MouseCursor.MOVE,
+                drag_interval=10, # Milliseconds between drag updates
+                on_horizontal_drag_update=handle_drag_update,
+                on_horizontal_drag_end=handle_drag_end,
+                content=drag_container,
+                # Set hit testing behavior if needed
+                # hit_test_behavior=ft.HitTestBehavior.OPAQUE,
+            )
+            
+            card_controls.append(card_gesture_detector)
+
+            # Choice Buttons (below the card)
+            left_choice_data = current_card.get("choices", {}).get("left", {})
+            right_choice_data = current_card.get("choices", {}).get("right", {})
+            card_controls.append(
+                ft.Row([
+                        ft.Text(left_choice_data.get("text", "..."), italic=True, color=ft.colors.GREY_500),
+                        ft.Container(width=40, expand=True), # Spacer
+                        ft.Text(right_choice_data.get("text", "..."), italic=True, color=ft.colors.GREY_500),
+                    ],
+                    width=300,
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    # visible=False # Initially hidden, shown on hover/drag?
+                )
+            )
+        
+        # --- Process Choice Function --- 
+        def process_choice(direction):
+            global GAME_STATE, GAME_DATA
+            
+            current_card_id = GAME_STATE.get("current_card_id")
+            if not current_card_id:
+                 print("Error: process_choice called with no current card ID")
+                 return
+                 
+            print(f"Processing choice '{direction}' for card {current_card_id}")
+            next_card_id = handle_card_choice(current_card_id, direction)
+            page.client_storage.set("game_state", GAME_STATE) # Save state
+            
+            # Show effects feedback (Snackbar)
+            card = get_card(current_card_id) # Get the card again (it might be None now)
+            choice_data = card.get("choices", {}).get(direction, {}) if card else {}
+            effects = choice_data.get("effects", {})
+            effect_text = ", ".join([f"{k.capitalize()}: {v:+d}" for k, v in effects.items()]) if effects else "No effect"
+            
+            page.show_snack_bar(ft.SnackBar(
+                content=ft.Text(f"{choice_data.get('text', direction.capitalize())}. {effect_text}"),
+                # action="OK",
+                duration=2500 # milliseconds
+            ))
+            
+            # Update UI - refresh the game screen for the next card or game over state
+            show_game_screen() # This will rebuild the card area etc.
+            page.update() 
+            
+        # --- Assemble Game Screen --- 
+        # Header
+        header_container.content = ft.Row([
+                ft.IconButton(ft.icons.ARROW_BACK, tooltip="Back to Menu", on_click=lambda e: navigate_to("title")),
+                ft.Text(GAME_DATA.get("game_info", {}).get("title", "Game"), size=20, weight=ft.FontWeight.BOLD, expand=True, text_align=ft.TextAlign.CENTER),
+                ft.Container(width=40) # Balance the back button space
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+
+        update_resource_indicators() # Update the indicator row
+        card_display_area.controls = card_controls # Set card content
+
+        # Combine elements for the game screen view
+        main_container.content = ft.Column([
+            header_container,
+            resource_indicators_row,
+            # ft.Divider(height=1, color=ft.colors.with_opacity(0.2, ft.colors.WHITE)),
+            ft.Container(height=10),
+            card_display_area, # This column now expands and centers
+            ft.Container(height=20), # Bottom padding
+        ], expand=True, spacing=0, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        # No page.update() here, called by navigate_to
+
+    def show_settings_screen():
+        """Builds and displays the settings screen."""
+        global APP_CONFIG, GAME_DATA, GAME_STATE
+        
+        # Header
+        header_container.content = ft.Row([
+                ft.IconButton(ft.icons.ARROW_BACK, tooltip="Back to Menu", on_click=lambda e: navigate_to("title")),
+                ft.Text("Settings", size=20, weight=ft.FontWeight.BOLD, expand=True, text_align=ft.TextAlign.CENTER),
+                 ft.Container(width=40) # Balance the back button space
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+
+        # Settings Controls
+        game_theme_dropdown = ft.Dropdown(
+            label="Game Scenario",
+            options=[
+                ft.dropdown.Option("tutorial", "Tutorial"),
+                ft.dropdown.Option("kingdom", "Medieval Kingdom"),
+                ft.dropdown.Option("business", "Corporate Business"),
+                # Add more dynamically later?
+            ],
+            value=APP_CONFIG.get("game_theme", "tutorial"),
+            width=300,
+        )
+
+        # Add more settings controls here (visuals, difficulty etc.)
+
+        def apply_settings(e):
+            global APP_CONFIG, GAME_DATA, GAME_STATE
+            new_theme = game_theme_dropdown.value
+            if new_theme != APP_CONFIG.get("game_theme"):
+                print(f"Changing theme to: {new_theme}")
+                APP_CONFIG["game_theme"] = new_theme
+                page.client_storage.remove("game_state") # Clear old game state
+                # Reload data and reset state
+                GAME_DATA = load_game_data(new_theme)
+                GAME_STATE = initialize_game_state(GAME_DATA)
+                print("Reloaded game data and reset state for new theme.")
+                
+                # Add feedback
+                page.show_snack_bar(ft.SnackBar(ft.Text(f"Switched to {new_theme.capitalize()} scenario."), duration=2000))
+            else:
+                 page.show_snack_bar(ft.SnackBar(ft.Text("Settings applied."), duration=1500))
+                 
+            # Navigate back to title after applying
+            navigate_to("title")
+
+        settings_content = ft.Column([
+            ft.Text("Game Options", size=18, weight=ft.FontWeight.BOLD),
+            game_theme_dropdown,
+            # Add other settings here
+            ft.Container(height=20),
+            ft.ElevatedButton("Apply & Back to Menu", width=300, on_click=apply_settings),
+            ft.Container(height=20),
+            ft.Text("More settings coming soon!", italic=True, color=ft.colors.GREY_500)
+        ], spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True, alignment=ft.MainAxisAlignment.CENTER)
+        
+        # Combine header and content
+        main_container.content = ft.Column([
+            header_container,
+            ft.Container(content=settings_content, expand=True, alignment=ft.alignment.center, padding=20)
+        ], spacing=0, expand=True)
+        # No page.update() here, called by navigate_to
+
+    def show_achievements_screen():
+        """Builds and displays the achievements screen."""
+        # Header
+        header_container.content = ft.Row([
+                ft.IconButton(ft.icons.ARROW_BACK, tooltip="Back to Menu", on_click=lambda e: navigate_to("title")),
+                ft.Text("Achievements", size=20, weight=ft.FontWeight.BOLD, expand=True, text_align=ft.TextAlign.CENTER),
+                 ft.Container(width=40) # Balance the back button space
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+            
+        achievements_content = ft.Column([
+            ft.Icon(ft.icons.EMOJI_EVENTS_OUTLINED, size=50, color=ft.colors.AMBER),
+            ft.Text("Achievements", size=24, weight=ft.FontWeight.BOLD),
+            ft.Container(
+                content=ft.Text("No achievements unlocked yet. Keep playing!", text_align=ft.TextAlign.CENTER),
+                padding=20,
+                # bgcolor=ft.colors.SURFACE_VARIANT,
+                border_radius=10,
+                width=300,
+                alignment=ft.alignment.center,
+            ),
+        ], spacing=15, horizontal_alignment=ft.CrossAxisAlignment.CENTER, expand=True, alignment=ft.MainAxisAlignment.CENTER)
+
+        # Combine header and content
+        main_container.content = ft.Column([
+            header_container,
+            ft.Container(content=achievements_content, expand=True, alignment=ft.alignment.center, padding=20)
+        ], spacing=0, expand=True)
+        # No page.update() here, called by navigate_to
+        
+    # --- Initial Setup --- 
+    page.add(main_container) # Add the main container to the page
+    navigate_to(current_screen) # Load the initial screen (either default or from storage)
+    
+    print("Flet app initialization complete.")

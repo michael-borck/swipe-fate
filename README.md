@@ -13,7 +13,7 @@ Swipe Verse is a theme-based card decision game where players navigate different
 - **Data-driven approach** with game content loaded from JSON configuration files
 - **Cross-platform support** for desktop, mobile, and web
 - **Mobile-first responsive design** that works on any screen size
-- **Customizable themes** and visual filters
+- **Customizable themes** (Selectable via Settings)
 
 ## Installation
 
@@ -22,41 +22,61 @@ Swipe Verse is a theme-based card decision game where players navigate different
 git clone https://github.com/yourusername/swipe-verse.git
 cd swipe-verse
 
-# Install with pip
+# Install with pip (preferably in a virtual environment)
 pip install -e .
 ```
 
 ## Usage
 
+To run the game locally during development:
+
 ```bash
-# Run the game with default settings
-swipe-verse
+# Run the Flet app 
+# (defaults to the tutorial game)
+flet run swipe_verse/main.py 
 
-# Run with a custom configuration file
-swipe-verse --config path/to/config.json
-
-# Run in terminal UI mode
-swipe-verse --mode tui
-
-# Run with custom assets
-swipe-verse --assets path/to/assets/folder
-
-# Run with a specific game
-swipe-verse --games business  # or kingdom, tutorial, etc.
-
-# Start with the tutorial game
-swipe-verse --games tutorial
+# Or, if installed via pip install -e .:
+swipe-verse 
 ```
 
-## Game Configuration
+Game scenarios can be changed from the in-app Settings menu.
 
-The game is data-driven and can be customized by editing JSON configuration files. Multiple theme configurations are available in the `swipe_verse/config/` directory:
+## Building for Distribution
+
+Use the standard Flet build commands:
+
+```bash
+# Build for Web
+flet build web
+
+# Build for macOS (run on macOS)
+flet build macos
+
+# Build for Windows (run on Windows)
+flet build windows --platform amd64  # or arm64
+
+# Build for Linux (run on Linux)
+flet build linux
+
+# Build for Android (requires Android SDK/toolchain setup)
+flet build apk 
+# or flet build aab
+
+# Build for iOS (requires macOS and Xcode setup)
+flet build ios
+```
+
+See the [Flet deployment documentation](https://flet.dev/docs/guides/python/deploying-app) for more details on prerequisites for each platform.
+
+## Game Scenarios
+
+The game is data-driven using JSON scenario files located in `swipe_verse/scenarios/`:
 
 - `kingdom_game.json` - Medieval kingdom management
 - `business_game.json` - Corporate leadership simulation
 - `tutorial_game.json` - Interactive guide to gameplay mechanics
 
-### Example Configuration
+### Example Configuration Snippet (`kingdom_game.json`)
 
 ```json
 {
@@ -64,30 +84,17 @@ The game is data-driven and can be customized by editing JSON configuration file
     "title": "Kingdom Fate",
     "description": "Rule your medieval kingdom through the power of swiping",
     "version": "0.1.0",
-    "author": "Swipe Fate Team",
-    "license": "CC BY-SA 4.0",
-    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "backstory": "The old king has died without an heir, and to everyone's surprise, you've been chosen to rule the kingdom..."
+    // ...
   },
   "theme": {
     "name": "Kingdom Theme",
-    "card_back": "assets/themes/kingdom/card_back.png",
-    "background": null,
-    "color_scheme": {
-      "primary": "#4a4a4a",
-      "secondary": "#f5f5f5",
-      "accent": "#3273dc"
-    },
     "resource_icons": {
-      "treasury": "assets/themes/kingdom/resource_icons/treasury.png",
-      "population": "assets/themes/kingdom/resource_icons/population.png",
-      "military": "assets/themes/kingdom/resource_icons/military.png",
-      "church": "assets/themes/kingdom/resource_icons/church.png"
+      "treasury": "swipe_verse/assets/themes/medieval/resource_icons/treasury.png",
+      "population": "swipe_verse/assets/themes/medieval/resource_icons/population.png",
+      "military": "swipe_verse/assets/themes/medieval/resource_icons/military.png",
+      "church": "swipe_verse/assets/themes/medieval/resource_icons/church.png"
     },
-    "filters": {
-      "default": "none",
-      "available": ["grayscale", "cartoon", "oil_painting"]
-    }
+    // ...
   },
   "game_settings": {
     "initial_resources": {
@@ -96,60 +103,38 @@ The game is data-driven and can be customized by editing JSON configuration file
       "military": 50,
       "church": 50
     },
-    "win_conditions": [
-      { "resource": "treasury", "min": 10, "max": 90 },
-      { "resource": "population", "min": 10, "max": 90 },
-      { "resource": "military", "min": 10, "max": 90 },
-      { "resource": "church", "min": 10, "max": 90 }
-    ],
-    "difficulty_modifiers": {
-      "easy": 0.7,
-      "standard": 1.0,
-      "hard": 1.3
-    },
-    "turn_unit": "years",
-    "stats": {
-      "popularity_formula": "treasury*0.2 + population*0.3 + military*0.2 + church*0.3"
-    }
+    // ...
   },
   "cards": [
     {
       "id": "card_001",
       "title": "The Harvest",
-      "text": "This year's harvest is meager. Should you raise taxes to compensate or distribute grain from the royal reserves?",
-      "image": "assets/themes/kingdom/card_fronts/card1.png",
+      "text": "This year's harvest is meager...",
+      "image": "swipe_verse/assets/themes/medieval/card_fronts/harvest.png",
       "choices": {
         "left": {
           "text": "Raise taxes",
-          "effects": {
-            "treasury": 15,
-            "population": -10,
-            "military": 0,
-            "church": -5
-          },
+          "effects": { "treasury": 15, "population": -10, "church": -5 },
           "next_card": "card_002"
         },
         "right": {
           "text": "Distribute grain",
-          "effects": {
-            "treasury": -10,
-            "population": 15,
-            "military": 5,
-            "church": 0
-          },
+          "effects": { "treasury": -10, "population": 15, "military": 5 },
           "next_card": "card_003"
         }
       }
     }
+    // ...
   ]
 }
 ```
+*(Note: Asset paths in JSON should be relative to the project root, e.g., `swipe_verse/assets/...`)*
 
 ## Development
 
 This project uses:
 - [Flet](https://flet.dev/) for UI
-- [Pydantic](https://pydantic-docs.helpmanual.io/) for data validation
+- [Pydantic](https://pydantic-docs.helpmanual.io/) for data validation (consider adding if needed for config loading)
 - [Ruff](https://github.com/charliermarsh/ruff) for linting
 - [mypy](http://mypy-lang.org/) for type checking
 - [pytest](https://docs.pytest.org/) for testing
@@ -157,8 +142,9 @@ This project uses:
 ### Development Setup
 
 ```bash
-# Install dev dependencies (using uv to manage your environment)
-uv pip install -e ".[dev]"
+# Install dev dependencies (using uv or pip)
+# uv pip install -e ".[dev]" 
+pip install -e ".[dev]"
 
 # Run linting
 ruff check .
@@ -172,20 +158,14 @@ pytest
 
 ### Development Tools
 
-The `tools/` directory contains utilities to help with development:
+The `tools/` directory contains some diagnostic utilities:
 
 ```bash
-# Build and package SwipeVerse for distribution
-python tools/build.py dist
-
-# Build for a specific platform
-python tools/build.py platform --platform desktop
-
-# Run diagnostic tests for Flet
-python tools/test_flet_module.py
+# Run diagnostic tests for Flet environment
+python tools/test_flet_module.py 
 ```
 
-See `tools/README.md` for details on available development tools.
+The custom build script (`tools/build.py`) has been removed in favor of standard `flet build` commands.
 
 ### Pre-commit Hooks
 
@@ -193,13 +173,16 @@ Use pre-commit to automatically format, lint, and type-check code before commits
 
 ```bash
 # Install pre-commit into your environment
-uv pip install pre-commit
+# uv pip install pre-commit
+pip install pre-commit
 
 # Install Git hook scripts
-uv pre-commit install
+# uv pre-commit install
+pre-commit install
 
 # Run all hooks against all files
-uv pre-commit run --all-files
+# uv pre-commit run --all-files
+pre-commit run --all-files
 ```
 
 ## License
